@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="eng">
+<head>
+    <meta charset="utf-8">
+    <title>example</title>
+    <link rel="stylesheet"
+          type="text/css"
+          href="style.css" >
+    <script type="text/javascript" src="../d3.v4.js"></script>
+
+    <style>
+        g.polygons path{
+            fill: white;
+            stroke: lightsteelblue;
+        }
+
+        /*g.polygons path:hover {*/
+            /*fill: yellow;*/
+        /*}*/
+
+        g.fuel circle {
+            fill: steelblue;
+        }
+    </style>
+</head>
+<!--<body onresize="callFunction()">  the javascript way -->
+<body >
+
+    <script type="text/javascript" >
+
+
+        d3.select(window).on("resize", callFunction); //the d3 way
+
+        callFunction(); //call it when the page loads.
+
+        function callFunction() {
+
+
+
+            function dragged() {
+                d3.select(this).attr("transform", "translate("+d3.event.x+","+d3.event.y+")");//
+            }
+
+            //Make an invisible tooltip
+            var tooltip = d3.select("body").append("div").style("opacity", "0").style("position", "absolute");
+
+            var svgTest = d3.select("body").select("svg");
+            if(!svgTest.empty()){
+                svgTest.remove(); //remove existing svg so it will get a new random 100 points each time we resize.
+            }
+
+            console.log(window.innerWidth);
+
+            //VORONOI LAYOUT
+
+            var width = window.innerWidth || document.documentElement.clientWidth; //2nd option for older browser
+            var height = window.innerHeight;
+
+            var vertices = d3.range(100).map(function (d) {
+                return [Math.random() * width, Math.random() * height];
+            });
+
+            //console.log(vertices);
+
+            //Create a voronoi Layout generator
+            var voronoi = d3.voronoi().size([width, height]);
+            var svg = d3.select("body").append("svg").attr("width", "100%").attr("height", "100%");
+            var chartGroup = svg.append("g")
+                .call(d3.drag().on("drag", dragged));
+
+            //zoom
+            chartGroup.call(d3.zoom()  //d3 knows mouse wheel is a zoom
+                .scaleExtent([0.4, 2])
+                .on("zoom", function(){
+
+                chartGroup.attr("transform", d3.event.transform);
+            }));
+
+            //Create a group to hold all the path elements
+            chartGroup.append("g").attr("class", "polygons")
+                .selectAll("path")
+                .data(voronoi.polygons(vertices))
+                .enter().append("path")
+                    //.attr("d", function(d){console.log(d);} )
+                      .attr("d", function (d) {
+                          return "M" + d.join("L") + "Z";
+                       }) //join by putting an L between each vertice
+                        //highlight the cell when hovered over
+                        //.on("mousemove", function(){ this.style.fill="red";} ) //this = element hovered over
+                      .on("mouseout", function(){ this.style.fill="white";} )
+                      .on("mousemove", function(d) {
+//                            console.log(d); //it's the x/y coord for each side
+
+                            //Show the right tooltip
+                            tooltip.style("opacity", "1")
+                            //Use event.pageX for mouse input.
+                                //.style("left", d3.event.pageX+"px")
+                                //.style("top",d3.event.pageY+"px");
+                            //But since we're not always called from a mouse event:
+                                .style("left", d[0][0]+"px")
+                                .style("top",d[0][1]+"px");
+
+                            //Zoom
+
+
+                            tooltip.html("Number of sides: " + d.length);
+
+                            this.style.fill="red";
+                       });
+
+
+            //Create a group to hold the circles (dots really)
+            chartGroup.append("g").attr("class", "fuel")
+                .selectAll("circle")
+                .data(vertices)
+                .enter().append("circle")
+                .attr("cx", function (d) {
+                    return d[0];
+                })
+                .attr("cy", function (d) {
+                    return d[1];
+                })
+                .attr("r", "2.5")
+
+            //Trigger an event without user interaction
+            d3.select("g.polygons").select("path:nth-child(30)")
+                .transition().duration(1000)
+                .style("fill", "yellow")
+                .transition().duration(1000).delay(1000)
+                .style("fill", "blue")
+                .attr("transform", "translate(20,20)");//.ease(d);
+//                .style("opacity", "0.2");
+
+            d3.select("g.polygons").select("path:nth-child(30)").dispatch("mousemove");
+
+        }
+    </script>
+
+
+
+</body>
+</html>
