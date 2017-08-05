@@ -17,7 +17,6 @@ var canvasHeight = 500;
 
 var LEFT = 0;
 var RIGHT = 1;
-var WRAP_BUFFER = 30;
 
 var OBSTACLE_TYPES = {
     CAR: 0,
@@ -33,10 +32,10 @@ var CAR_TYPES = {
     CAR5: 4,
 }   
 
-var LOG_TYPE = {
-    SHORT: 0,
-    MEDIUM: 1,
-    LONG: 2,
+var LOG_WIDTH = {
+    SHORT: 40,
+    MEDIUM: 160,
+    LONG: 250,
 }
 
 var numRows = 13; // 5 street, 5 river, start, middle, end
@@ -56,46 +55,46 @@ function startGame() {
 
     rows.push(new ObstacleRow( {
         rowIndex: 1,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR1, 
-        direction: LEFT, speed: 1, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 460  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 2,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR2, 
-        direction: RIGHT, speed: 6, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+        direction: RIGHT, speed: 7, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 260  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 3,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR3, 
-        direction: LEFT, speed: 3, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+        direction: LEFT, speed: 4, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 400  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 4,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR4, 
-        direction: RIGHT, speed: 7, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+        direction: RIGHT, speed: 14, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 450  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 5,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
-        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 320  
     })); 
     
     rows.push(new Row(6));
     
     rows.push(new ObstacleRow( {
         rowIndex: 7,   type: OBSTACLE_TYPES.PAD,  extraArg: undefined, 
-        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 3, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 3, spaceBetweenObstacles: 80, spaceBetweenGroups: 250  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 8,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_TYPE.SHORT, 
-        direction: RIGHT, speed: 8, numGroups: 2, obstaclesPerGroup: 3, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+        rowIndex: 8,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.SHORT, 
+        direction: RIGHT, speed: 8, numGroups: 2, obstaclesPerGroup: 2, spaceBetweenObstacles: 40, spaceBetweenGroups: 30  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 9,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_TYPE.MEDIUM, 
+        rowIndex: 9,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.LONG, 
         direction: LEFT, speed: 4, numGroups: 1, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 10,   type: OBSTACLE_TYPES.PAD,  extraArg: undefined,  
-        direction: RIGHT, speed: 2, numGroups: 2, obstaclesPerGroup: 2, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+        direction: RIGHT, speed: 2, numGroups: 2, obstaclesPerGroup: 2, spaceBetweenObstacles: 80, spaceBetweenGroups: 250  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 11,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_TYPE.LONG, 
-        direction: LEFT, speed: 5, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+        rowIndex: 11,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.MEDIUM, 
+        direction: LEFT, speed: 5, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: canvasWidth/2  
     })); 
     
     rows.push(new Row(12 ));
@@ -103,7 +102,6 @@ function startGame() {
     // myScore = new component("30px", "Consolas", "black", 280, 40, "text");
     myGameArea.start();
 }
-// function ObstacleRow(rowIndex, obstacleType, extraArg, direction, speed, numGroups, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
 
 var myGameArea = {
     canvas : document.createElement("canvas"),
@@ -134,19 +132,20 @@ function Frog() {
     this.width = rowHeight;
     this.height = rowHeight;
     this.image = new Image();
-    this.image.src = "./frog.jpg";
+    this.image.src = "frog.png";
     this.x = (canvasWidth / 2) - (rowHeight / 2);
     this.y = canvasHeight - rowHeight;
     this.update = function() {
         ctx = myGameArea.context;
 
-        // ctx.drawImage(this.image, 
-        // this.x, 
-        // this.y,
-        // this.width, this.height);
+        ctx.drawImage(this.image, 
+        this.x, 
+        this.y,
+        this.width, this.height);
+        // ctx.stroke();
 
-        ctx.fillStyle = "green";
-        ctx.fillRect(me.x, me.y, me.width, me.height);
+        // ctx.fillStyle = "green";
+        // ctx.fillRect(me.x, me.y, me.width, me.height);
 
     }
     this.newPos = function() {
@@ -250,11 +249,6 @@ function ObstacleRow(config){
 
         Row.prototype.update.call(this);
 
-        // ctx.drawImage(this.image, 
-        // this.x, 
-        // this.y,
-        // this.width, this.height);
-
         for(var i = 0; i < this.obstacles.length; ++i){
             this.obstacles[i].update();
         }
@@ -268,7 +262,7 @@ ObstacleRow.prototype = Object.create(Row.prototype);
 function createObstacle(type, x, rowY, direction, speed, extraArg){
     switch(type){
         case OBSTACLE_TYPES.CAR: 
-            return new Car(extraArg, x, rowY, direction, speed);
+            return new Car(x, rowY, direction, speed, extraArg);
             break;
         case OBSTACLE_TYPES.PAD:
             return new Pad(x, rowY, direction, speed);
@@ -284,10 +278,15 @@ function createObstacle(type, x, rowY, direction, speed, extraArg){
     param:  x - the x position of the car
     param:  y - the y position of the row's y
 */
-function Car(type, x, rowY, direction, speed){
+function Car(x, rowY, direction, speed, type){
 
     Obstacle.call(this, x, rowY, direction, speed );
     this.type = type;
+
+    console.log("Car() called this= ", this);
+
+    this.image = new Image();
+    this.image.src = undefined;
 
     this.update = function(){
 
@@ -296,24 +295,51 @@ function Car(type, x, rowY, direction, speed){
         let ctx = myGameArea.context;
         switch(this.type){
             case CAR_TYPES.CAR1:
-                ctx.fillStyle = "#EBA72F";
-                ctx.fillRect(this.x, this.rowY+2, 30, rowHeight - 4);
+                this.image.src = "car1.png";
+                this.width = 60;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
                 break;
             case CAR_TYPES.CAR2:
-                ctx.fillStyle = "#B951F4";
-                ctx.fillRect(this.x, this.rowY+1, 30, rowHeight - 2);
+                this.image.src = "car2.png";
+                this.width = 70;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
                 break;
             case CAR_TYPES.CAR3:
-                ctx.fillStyle = "#589522";
-                ctx.fillRect(this.x, this.rowY+2, 30, rowHeight - 4);
+                this.image.src = "car5.png";
+                this.width = 80;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
                 break;
             case CAR_TYPES.CAR4:
-                ctx.fillStyle = "#DE53CF";
-                ctx.fillRect(this.x, this.rowY+4, 30, rowHeight - 8);
+                this.image.src = "car3.png";
+                this.width = 60;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
+                break;
                 break;
             case CAR_TYPES.CAR5:
-                ctx.fillStyle = "#FEFEFE";
-                ctx.fillRect(this.x, this.rowY+4, 30, rowHeight - 8);
+                this.image.src = "truck2.png";
+                this.width = 150;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
+                break;
                 break;
         }
     }
@@ -341,20 +367,12 @@ function Pad(x, rowY, direction, speed){
 
 
         ctx.fillStyle = "#A94D03";
+        ctx.strokeStyle = "#440D03";
         ctx.beginPath();
         ctx.lineWidth = 5;
-        ctx.ellipse(centerX, this.centerY, this.width/2, rowHeight/2, 0, 0, 2 * Math.PI); //center x, center y, radiusX, radiusY, rotation, startAngle, endAngle);
+        ctx.ellipse(centerX, this.centerY, this.width/2, (rowHeight/2 - 2), 0, 0, 2 * Math.PI); //center x, center y, radiusX, radiusY, rotation, startAngle, endAngle);
         ctx.fill();
         ctx.stroke();
-
-
-        // ctx.beginPath();
-        // ctx.arc(this.x, this.rowY, 10, 0, 2 * Math.PI, false);
-        // ctx.fillStyle = 'green';
-        // ctx.fill();
-        // ctx.lineWidth = 5;
-        // ctx.strokeStyle = '#003300';
-        // ctx.stroke();
     }
       
 }
@@ -362,21 +380,12 @@ Pad.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
 
 
 
-function Log(x, rowY, direction, speed, logType){
+function Log(x, rowY, direction, speed, logWidth){
 
     Obstacle.call(this, x, rowY, direction, speed );
 
-    switch(logType){
-        case LOG_TYPE.SHORT:
-            this.width = 30;
-            break;
-        case LOG_TYPE.MEDIUM:
-            this.width = 50;
-            break;
-        case LOG_TYPE.LONG:
-            this.width = 80;
-            break;
-    }
+    this.width = logWidth;
+    
 
     this.update = function(){
 
@@ -384,8 +393,18 @@ function Log(x, rowY, direction, speed, logType){
 
         let ctx = myGameArea.context;
 
-        ctx.fillStyle = "#797800";
+        //Make two linear gradients, both starting from the middle of the log
+        var centerY = this.rowY+(rowHeight/2);
+
+        var gradient = ctx.createLinearGradient(this.x, centerY,this.x, this.rowY);
+        var centerX = this.x + this.width/2;
+
+        gradient.addColorStop(0,"#797800");
+        gradient.addColorStop(1,"#D9D860");
+        ctx.fillStyle = gradient;
+
         ctx.fillRect(this.x, this.rowY+2, this.width, rowHeight - 4);
+
     }
       
 }
@@ -394,6 +413,8 @@ Log.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
 
 
 function Obstacle(x, rowY, direction, speed){
+
+    console.log("Obstacle setting x = ", x);
     this.x = x;
     this.rowY = rowY;
     this.width = 10;
@@ -402,18 +423,21 @@ function Obstacle(x, rowY, direction, speed){
     this.speed = speed;
     
 }
+Obstacle.prototype.getX = function(){
+    return this.x;
+}
 
 Obstacle.prototype.update = function(){
     //Update x position, consider wrapping
     if(this.direction === LEFT){
         this.x -= this.speed;
-        if(this.x < -WRAP_BUFFER){
-            this.x = canvasWidth + WRAP_BUFFER;
+        if(this.x < -this.width){
+            this.x = canvasWidth + this.width; //give a wrap buffer
         }
     } else {
         this.x += this.speed;
-        if(this.x > canvasWidth + WRAP_BUFFER ){
-            this.x = -WRAP_BUFFER;
+        if(this.x > canvasWidth + this.width ){
+            this.x = -this.width;
         }
     }
 }
@@ -441,24 +465,6 @@ function refreshGameArea() {
     //     } 
     // }
     myGameArea.clear();
-    // myGameArea.frameNo += 1;
-    // if (myGameArea.frameNo == 1 || everyinterval(150)) {
-    //     x = myGameArea.canvas.width;
-    //     minHeight = 20;
-    //     maxHeight = 200;
-    //     height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
-    //     minGap = 50;
-    //     maxGap = 200;
-    //     gap = Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
-    //     myObstacles.push(new component(10, height, "green", x, 0));
-    //     myObstacles.push(new component(10, x - height - gap, "green", x, height + gap));
-    // }
-    // for (i = 0; i < myObstacles.length; i += 1) {
-    //     myObstacles[i].x += -1;
-    //     myObstacles[i].update();
-    // }
-    // myScore.text="SCORE: " + myGameArea.frameNo;
-    // myScore.update();
     
     for (i = 0; i < rows.length; i += 1) {
         rows[i].update();
@@ -469,14 +475,7 @@ function refreshGameArea() {
 
 }
 
-// function everyinterval(n) {
-//     if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
-//     return false;
-// }
 
-function accelerate(n) {
-    // myGamePiece.gravity = n;
-}
 </script>
 
 </body>
