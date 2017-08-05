@@ -221,7 +221,7 @@ Row.prototype.getRowColor = function(){
 }
 
 /**
-Argument:  {
+param:  config -  {
         rowIndex: 5,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
         direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
     }
@@ -263,36 +263,7 @@ function ObstacleRow(config){
 }
 ObstacleRow.prototype = Object.create(Row.prototype);
 
-// function CarRow(rowIndex, carType, direction, speed, numGroups, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
 
-//     ObstacleRow.call(this, rowIndex, direction, speed, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups);
-
-//     this.carType = carType;
-
-//     //Initialize the obstacles
-//     for(var g = 0; g < )
-
-//     this.obstacles.push(new Car1(this.rowIndex, 40, direction, speed));
-//     this.obstacles.push(new Car2(this.rowIndex, 10, direction, speed));
-//     this.obstacles.push(new Obstacle(this.rowIndex, 80, direction, speed));
-    
-//     // this.update = function() {
-//     //     ctx = myGameArea.context;
-
-//     //     Row.prototype.update.call(this);
-
-//     //     // ctx.drawImage(this.image, 
-//     //     // this.x, 
-//     //     // this.y,
-//     //     // this.width, this.height);
-
-//     //     for(var i = 0; i < this.obstacles.length; ++i){
-//     //         this.obstacles[i].update();
-//     //     }
-//     // }
-
-// }
-// CarRow.prototype = Object.create(ObstacleRow.prototype);
 
 function createObstacle(type, x, rowY, direction, speed, extraArg){
     switch(type){
@@ -303,7 +274,7 @@ function createObstacle(type, x, rowY, direction, speed, extraArg){
             return new Pad(x, rowY, direction, speed);
             break;
         case OBSTACLE_TYPES.LOG:
-            return new Pad(x, rowY, direction, speed);
+            return new Log(x, rowY, direction, speed, extraArg);
             break;
     }
 }
@@ -325,8 +296,7 @@ function Car(type, x, rowY, direction, speed){
         let ctx = myGameArea.context;
         switch(this.type){
             case CAR_TYPES.CAR1:
-
-                ctx.fillStyle = "#0B0407";
+                ctx.fillStyle = "#EBA72F";
                 ctx.fillRect(this.x, this.rowY+2, 30, rowHeight - 4);
                 break;
             case CAR_TYPES.CAR2:
@@ -351,9 +321,15 @@ function Car(type, x, rowY, direction, speed){
 }
 Car.prototype = Object.create(Obstacle.prototype);
 
+
+
 function Pad(x, rowY, direction, speed){
 
     Obstacle.call(this, x, rowY, direction, speed );
+
+    this.width = rowHeight+(rowHeight*0.3);
+
+    this.centerY = this.rowY + (rowHeight/2); //this will remain constant
 
     this.update = function(){
 
@@ -361,16 +337,60 @@ function Pad(x, rowY, direction, speed){
 
         let ctx = myGameArea.context;
 
-        ctx.fillStyle = "#A94D03";
-        // ctx.beginPath();
-        // ctx.ellipse(this.x, this.rowY, rowHeight+(rowHeight*0.3), rowHeight, 0, 0, 0); //x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise);
-        // ctx.stroke();
-        ctx.fillRect(this.x, this.rowY+4, 30, rowHeight - 8);
+        centerX = this.x + (this.width/2);
 
+
+        ctx.fillStyle = "#A94D03";
+        ctx.beginPath();
+        ctx.lineWidth = 5;
+        ctx.ellipse(centerX, this.centerY, this.width/2, rowHeight/2, 0, 0, 2 * Math.PI); //center x, center y, radiusX, radiusY, rotation, startAngle, endAngle);
+        ctx.fill();
+        ctx.stroke();
+
+
+        // ctx.beginPath();
+        // ctx.arc(this.x, this.rowY, 10, 0, 2 * Math.PI, false);
+        // ctx.fillStyle = 'green';
+        // ctx.fill();
+        // ctx.lineWidth = 5;
+        // ctx.strokeStyle = '#003300';
+        // ctx.stroke();
     }
       
 }
 Pad.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
+
+
+
+function Log(x, rowY, direction, speed, logType){
+
+    Obstacle.call(this, x, rowY, direction, speed );
+
+    switch(logType){
+        case LOG_TYPE.SHORT:
+            this.width = 30;
+            break;
+        case LOG_TYPE.MEDIUM:
+            this.width = 50;
+            break;
+        case LOG_TYPE.LONG:
+            this.width = 80;
+            break;
+    }
+
+    this.update = function(){
+
+        Obstacle.prototype.update.call(this);
+
+        let ctx = myGameArea.context;
+
+        ctx.fillStyle = "#797800";
+        ctx.fillRect(this.x, this.rowY+2, this.width, rowHeight - 4);
+    }
+      
+}
+Log.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
+
 
 
 function Obstacle(x, rowY, direction, speed){
@@ -380,21 +400,7 @@ function Obstacle(x, rowY, direction, speed){
     this.height = 10;
     this.direction = direction;
     this.speed = speed;
-    // this.update = function() {
-        
-    //     //Update x position, consider wrapping
-    //     if(this.direction == LEFT){
-    //         this.x -= this.speed;
-    //         if(this.x < -WRAP_BUFFER){
-    //             this.x = canvasWidth + WRAP_BUFFER;
-    //         }
-    //     } else {
-    //         this.x += this.speed;
-    //         if(this.x > canvasWidth + WRAP_BUFFER ){
-    //             this.x = -WRAP_BUFFER;
-    //         }
-    //     }
-    // };
+    
 }
 
 Obstacle.prototype.update = function(){
