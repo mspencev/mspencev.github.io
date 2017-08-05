@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+canvas {
+    border:20px solid #59921E;
+    background-color: #f1f1f1;
+}
+</style>
+</head>
+<body onload="startGame()">
+<script>
+
+var canvasWidth = 800;
+var canvasHeight = 500;
+
+var LEFT = 0;
+var RIGHT = 1;
+var WRAP_BUFFER = 30;
+
+var OBSTACLE_TYPES = {
+    CAR: 0,
+    PAD: 1,
+    LOG: 2
+}
+
+var CAR_TYPES = {
+    CAR1: 0,
+    CAR2: 1,
+    CAR3: 2,
+    CAR4: 3,
+    CAR5: 4,
+}   
+
+var numRows = 13; // 5 street, 5 river, start, middle, end
+
+var frog;
+var rows = [];
+// var myObstacles = [];
+// var myScore;
+
+
+var rowHeight = canvasHeight / numRows;
+var jumpSize = canvasHeight / numRows;
+
+function startGame() {
+    frog = new Frog();
+    rows.push(new Row(0));
+    rows.push(new ObstacleRow(1,  undefined, undefined )); //row index, obstacle type, obstacle/space pattern
+    rows.push(new ObstacleRow(2, RIGHT, 2 ));
+    rows.push(new ObstacleRow(3, LEFT, 7 ));
+    rows.push(new ObstacleRow(4, RIGHT, 4 ));
+    rows.push(new ObstacleRow(5, LEFT, 3 ));
+    rows.push(new Row(6, 'middle', '@#@######' ));
+    rows.push(new ObstacleRow(7, LEFT, 3 ));
+    rows.push(new ObstacleRow(8, RIGHT, 6 ));
+    rows.push(new ObstacleRow(9, LEFT, 10));
+    rows.push(new ObstacleRow(10, RIGHT, 15));
+    rows.push(new ObstacleRow(11, LEFT, 4));
+    rows.push(new Row(12 ));
+
+    // myScore = new component("30px", "Consolas", "black", 280, 40, "text");
+    myGameArea.start();
+}
+// function ObstacleRow(rowIndex, direction, speed, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
+
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = canvasWidth;
+        this.canvas.height = canvasHeight;
+        this.context = this.canvas.getContext("2d");
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(refreshGameArea, 50);
+        window.addEventListener('keydown', function (e) {
+            myGameArea.key = e.keyCode;
+        })
+        window.addEventListener('keyup', function (e) {
+            myGameArea.key = false;
+        })    
+    },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+    
+}
+
+function Frog() {
+    var me = this;
+    // this.type = type;
+    // this.score = 0;
+    this.width = rowHeight;
+    this.height = rowHeight;
+    this.image = new Image();
+    this.image.src = "./frog.jpg";
+    this.x = (canvasWidth / 2) - (rowHeight / 2);
+    this.y = canvasHeight - rowHeight;
+    this.update = function() {
+        ctx = myGameArea.context;
+
+        // ctx.drawImage(this.image, 
+        // this.x, 
+        // this.y,
+        // this.width, this.height);
+
+        ctx.fillStyle = "green";
+        ctx.fillRect(me.x, me.y, me.width, me.height);
+
+    }
+    this.newPos = function() {
+        // this.x += this.speedX;
+        // this.y += this.speedY + this.gravitySpeed;
+        this.hitBottom();
+    }
+    this.hitBottom = function() {
+        // var rockbottom = myGameArea.canvas.height - this.height;
+        // if (this.y > rockbottom) {
+        //     this.y = rockbottom;
+        //     this.gravitySpeed = 0;
+        // }
+    }
+    this.crashWith = function(otherobj) {
+        // var myleft = this.x;
+        // var myright = this.x + (this.width);
+        // var mytop = this.y;
+        // var mybottom = this.y + (this.height);
+        // var otherleft = otherobj.x;
+        // var otherright = otherobj.x + (otherobj.width);
+        // var othertop = otherobj.y;
+        // var otherbottom = otherobj.y + (otherobj.height);
+        // var crash = true;
+        // if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
+        //     crash = false;
+        // }
+        // return crash;
+    }
+}
+
+function Row(rowIndex){
+
+    var me = this;
+    this.rowIndex = rowIndex;
+    this.x = 0;
+    this.y = getRowY(rowIndex);
+}
+
+Row.prototype.update = function(){
+    ctx = myGameArea.context;
+
+    // ctx.drawImage(this.image, 
+    // this.x, 
+    // this.y,
+    // this.width, this.height);
+
+    ctx.fillStyle = this.getRowColor();
+
+    ctx.fillRect(this.x, this.y, canvasWidth, rowHeight);
+}
+
+Row.prototype.getRowColor = function(){
+    switch(this.rowIndex){
+        case 0:
+        case 6:
+            return "#FEFF41";
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+            return "#000000";
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+            return "#0B009B"; 
+    }
+}
+
+function ObstacleRow(rowIndex, obstacleType, direction, speed, numGroups, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
+
+    Row.call(this, rowIndex);
+
+    this.obstacleType = obstacleType;
+    this.direction = direction;
+    this.speed = speed;
+    this.obstacles = [];
+    
+
+    this.initX = 0;
+    let x = this.initX;
+    for(var g = 0; g < numGroups; ++g){
+        for(var o = 0; o < obsitaclesPerGroup; ++o){
+            this.obstacles.push(createObstacle(this.obstacleType, x, getRowY(this.rowIndex)));
+            x += spaceBetweenObstacles;
+        }
+        x += spaceBetweenGroups;
+    }
+
+   
+    this.update = function() {
+        ctx = myGameArea.context;
+
+        Row.prototype.update.call(this);
+
+        // ctx.drawImage(this.image, 
+        // this.x, 
+        // this.y,
+        // this.width, this.height);
+
+        for(var i = 0; i < this.obstacles.length; ++i){
+            this.obstacles[i].update();
+        }
+    }
+
+}
+ObstacleRow.prototype = Object.create(Row.prototype);
+
+function CarRow(rowIndex, carType, direction, speed, numGroups, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
+
+    ObstacleRow.call(this, rowIndex, direction, speed, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups);
+
+    this.carType = carType;
+
+    //Initialize the obstacles
+    for(var g = 0; g < )
+
+    this.obstacles.push(new Car1(this.rowIndex, 40, direction, speed));
+    this.obstacles.push(new Car2(this.rowIndex, 10, direction, speed));
+    this.obstacles.push(new Obstacle(this.rowIndex, 80, direction, speed));
+    
+    // this.update = function() {
+    //     ctx = myGameArea.context;
+
+    //     Row.prototype.update.call(this);
+
+    //     // ctx.drawImage(this.image, 
+    //     // this.x, 
+    //     // this.y,
+    //     // this.width, this.height);
+
+    //     for(var i = 0; i < this.obstacles.length; ++i){
+    //         this.obstacles[i].update();
+    //     }
+    // }
+
+}
+CarRow.prototype = Object.create(ObstacleRow.prototype);
+
+function createObstacle(type, x, y){
+    switch(type){
+        case OBSTACLE_TYPES.CAR:
+            break;
+        case OBSTACLE_TYPES.PAD:
+            break;
+        case OBSTACLE_TYPES.LOG:
+            break;
+    }
+}
+
+switch(type){
+        case OBSTACLE_TYPES.CAR:
+            break;
+        case CAR_TYPES.CAR2:
+            break;
+        case CAR_TYPES.CAR2:
+            break;
+        case CAR_TYPES.CAR2:
+            break;
+    }
+
+function Obstacle(rowIndex, x, direction, speed){
+    this.rowIndex = rowIndex;
+    this.x = x;
+    this.y = getRowY(this.rowIndex);
+    this.width = 10;
+    this.height = 10;
+    this.direction = direction;
+    this.speed = speed;
+    this.update = function() {
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+        if(this.direction == LEFT){
+            this.x -= this.speed;
+            if(this.x < -WRAP_BUFFER){
+                this.x = canvasWidth + WRAP_BUFFER;
+            }
+        } else {
+            this.x += this.speed;
+            if(this.x > canvasWidth + WRAP_BUFFER ){
+                this.x = -WRAP_BUFFER;
+            }
+        }
+
+        if(this.x < 0){
+            this.x 
+        }
+
+
+    };
+}
+
+function Car1(){
+    obstacle.call(this);
+
+    this.update = function(){
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+
+Car1.prototype = new Obstacle(); //or Object.create(Obstacle.prototype)
+
+function getRowY(rowIndex){
+    return canvasHeight - (rowHeight * (rowIndex+1));
+}
+
+function refreshGameArea() {
+
+
+    if (myGameArea.key && myGameArea.key == 37) {frog.x -= jumpSize; console.log("Frog.x = ", frog.x); }
+    if (myGameArea.key && myGameArea.key == 39) {frog.x += jumpSize; console.log("Frog.x = ", frog.x);}
+    if (myGameArea.key && myGameArea.key == 38) {frog.y -= jumpSize; console.log("Frog.y = ", frog.y);}
+    if (myGameArea.key && myGameArea.key == 40) {frog.y += jumpSize; console.log("Frog.y = ", frog.y);}
+
+    //The refresh will happen multiple times before the key-up listener is fired, so we'll prevent multiple hops in one key click.
+    myGameArea.key = false;
+
+
+    // var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+    // for (i = 0; i < myObstacles.length; i += 1) {
+    //     if (myGamePiece.crashWith(myObstacles[i])) {
+    //         return;
+    //     } 
+    // }
+    myGameArea.clear();
+    // myGameArea.frameNo += 1;
+    // if (myGameArea.frameNo == 1 || everyinterval(150)) {
+    //     x = myGameArea.canvas.width;
+    //     minHeight = 20;
+    //     maxHeight = 200;
+    //     height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+    //     minGap = 50;
+    //     maxGap = 200;
+    //     gap = Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
+    //     myObstacles.push(new component(10, height, "green", x, 0));
+    //     myObstacles.push(new component(10, x - height - gap, "green", x, height + gap));
+    // }
+    // for (i = 0; i < myObstacles.length; i += 1) {
+    //     myObstacles[i].x += -1;
+    //     myObstacles[i].update();
+    // }
+    // myScore.text="SCORE: " + myGameArea.frameNo;
+    // myScore.update();
+    
+    for (i = 0; i < rows.length; i += 1) {
+        rows[i].update();
+    }
+
+    frog.newPos();
+    frog.update();
+
+}
+
+// function everyinterval(n) {
+//     if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+//     return false;
+// }
+
+function accelerate(n) {
+    // myGamePiece.gravity = n;
+}
+</script>
+
+</body>
+</html>
