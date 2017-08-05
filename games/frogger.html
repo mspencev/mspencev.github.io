@@ -33,6 +33,12 @@ var CAR_TYPES = {
     CAR5: 4,
 }   
 
+var LOG_TYPE = {
+    SHORT: 0,
+    MEDIUM: 1,
+    LONG: 2,
+}
+
 var numRows = 13; // 5 street, 5 river, start, middle, end
 
 var frog;
@@ -47,24 +53,57 @@ var jumpSize = canvasHeight / numRows;
 function startGame() {
     frog = new Frog();
     rows.push(new Row(0));
-    rows.push(new ObstacleRow(1,  undefined, undefined )); //row index, obstacle type, obstacle/space pattern
-    rows.push(new ObstacleRow(2, RIGHT, 2 ));
-    rows.push(new ObstacleRow(3, LEFT, 7 ));
-    rows.push(new ObstacleRow(4, RIGHT, 4 ));
-    rows.push(new ObstacleRow(5, LEFT, 3 ));
-    rows.push(new Row(6, 'middle', '@#@######' ));
-    rows.push(new ObstacleRow(7, LEFT, 3 ));
-    rows.push(new ObstacleRow(8, RIGHT, 6 ));
-    rows.push(new ObstacleRow(9, LEFT, 10));
-    rows.push(new ObstacleRow(10, RIGHT, 15));
-    rows.push(new ObstacleRow(11, LEFT, 4));
+
+    rows.push(new ObstacleRow( {
+        rowIndex: 1,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR1, 
+        direction: LEFT, speed: 1, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+    })); 
+    rows.push(new ObstacleRow( {
+        rowIndex: 2,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR2, 
+        direction: RIGHT, speed: 6, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+    })); 
+    rows.push(new ObstacleRow( {
+        rowIndex: 3,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR3, 
+        direction: LEFT, speed: 3, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+    })); 
+    rows.push(new ObstacleRow( {
+        rowIndex: 4,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR4, 
+        direction: RIGHT, speed: 7, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+    })); 
+    rows.push(new ObstacleRow( {
+        rowIndex: 5,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
+        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+    })); 
+    
+    rows.push(new Row(6));
+    
+    rows.push(new ObstacleRow( {
+        rowIndex: 7,   type: OBSTACLE_TYPES.PAD,  extraArg: undefined, 
+        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 3, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+    })); 
+    rows.push(new ObstacleRow( {
+        rowIndex: 8,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_TYPE.SHORT, 
+        direction: RIGHT, speed: 8, numGroups: 2, obstaclesPerGroup: 3, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+    })); 
+    rows.push(new ObstacleRow( {
+        rowIndex: 9,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_TYPE.MEDIUM, 
+        direction: LEFT, speed: 4, numGroups: 1, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+    })); 
+    rows.push(new ObstacleRow( {
+        rowIndex: 10,   type: OBSTACLE_TYPES.PAD,  extraArg: undefined,  
+        direction: RIGHT, speed: 2, numGroups: 2, obstaclesPerGroup: 2, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+    })); 
+    rows.push(new ObstacleRow( {
+        rowIndex: 11,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_TYPE.LONG, 
+        direction: LEFT, speed: 5, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+    })); 
+    
     rows.push(new Row(12 ));
 
     // myScore = new component("30px", "Consolas", "black", 280, 40, "text");
     myGameArea.start();
 }
-// function ObstacleRow(rowIndex, direction, speed, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
-
+// function ObstacleRow(rowIndex, obstacleType, extraArg, direction, speed, numGroups, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
 
 var myGameArea = {
     canvas : document.createElement("canvas"),
@@ -181,26 +220,30 @@ Row.prototype.getRowColor = function(){
     }
 }
 
-function ObstacleRow(rowIndex, obstacleType, direction, speed, numGroups, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
+/**
+Argument:  {
+        rowIndex: 5,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
+        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+    }
+*/
+function ObstacleRow(config){
 
-    Row.call(this, rowIndex);
+    Row.call(this, config.rowIndex);
 
-    this.obstacleType = obstacleType;
-    this.direction = direction;
-    this.speed = speed;
+    this.obstacleType = config.type;
+    this.direction = config.direction;
+    this.speed = config.speed;
     this.obstacles = [];
     
-
     this.initX = 0;
     let x = this.initX;
-    for(var g = 0; g < numGroups; ++g){
-        for(var o = 0; o < obsitaclesPerGroup; ++o){
-            this.obstacles.push(createObstacle(this.obstacleType, x, getRowY(this.rowIndex)));
-            x += spaceBetweenObstacles;
+    for(var g = 0; g < config.numGroups; ++g){
+        for(var o = 0; o < config.obstaclesPerGroup; ++o){
+            this.obstacles.push(createObstacle(this.obstacleType, x, getRowY(config.rowIndex), this.direction, this.speed, config.extraArg));
+            x += config.spaceBetweenObstacles;
         }
-        x += spaceBetweenGroups;
+        x += config.spaceBetweenGroups;
     }
-
    
     this.update = function() {
         ctx = myGameArea.context;
@@ -220,100 +263,154 @@ function ObstacleRow(rowIndex, obstacleType, direction, speed, numGroups, obsita
 }
 ObstacleRow.prototype = Object.create(Row.prototype);
 
-function CarRow(rowIndex, carType, direction, speed, numGroups, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
+// function CarRow(rowIndex, carType, direction, speed, numGroups, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups){
 
-    ObstacleRow.call(this, rowIndex, direction, speed, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups);
+//     ObstacleRow.call(this, rowIndex, direction, speed, obsitaclesPerGroup, spaceBetweenObstacles, spaceBetweenGroups);
 
-    this.carType = carType;
+//     this.carType = carType;
 
-    //Initialize the obstacles
-    for(var g = 0; g < )
+//     //Initialize the obstacles
+//     for(var g = 0; g < )
 
-    this.obstacles.push(new Car1(this.rowIndex, 40, direction, speed));
-    this.obstacles.push(new Car2(this.rowIndex, 10, direction, speed));
-    this.obstacles.push(new Obstacle(this.rowIndex, 80, direction, speed));
+//     this.obstacles.push(new Car1(this.rowIndex, 40, direction, speed));
+//     this.obstacles.push(new Car2(this.rowIndex, 10, direction, speed));
+//     this.obstacles.push(new Obstacle(this.rowIndex, 80, direction, speed));
     
-    // this.update = function() {
-    //     ctx = myGameArea.context;
+//     // this.update = function() {
+//     //     ctx = myGameArea.context;
 
-    //     Row.prototype.update.call(this);
+//     //     Row.prototype.update.call(this);
 
-    //     // ctx.drawImage(this.image, 
-    //     // this.x, 
-    //     // this.y,
-    //     // this.width, this.height);
+//     //     // ctx.drawImage(this.image, 
+//     //     // this.x, 
+//     //     // this.y,
+//     //     // this.width, this.height);
 
-    //     for(var i = 0; i < this.obstacles.length; ++i){
-    //         this.obstacles[i].update();
-    //     }
-    // }
+//     //     for(var i = 0; i < this.obstacles.length; ++i){
+//     //         this.obstacles[i].update();
+//     //     }
+//     // }
 
-}
-CarRow.prototype = Object.create(ObstacleRow.prototype);
+// }
+// CarRow.prototype = Object.create(ObstacleRow.prototype);
 
-function createObstacle(type, x, y){
+function createObstacle(type, x, rowY, direction, speed, extraArg){
     switch(type){
-        case OBSTACLE_TYPES.CAR:
+        case OBSTACLE_TYPES.CAR: 
+            return new Car(extraArg, x, rowY, direction, speed);
             break;
         case OBSTACLE_TYPES.PAD:
+            return new Pad(x, rowY, direction, speed);
             break;
         case OBSTACLE_TYPES.LOG:
+            return new Pad(x, rowY, direction, speed);
             break;
     }
 }
 
-switch(type){
-        case OBSTACLE_TYPES.CAR:
-            break;
-        case CAR_TYPES.CAR2:
-            break;
-        case CAR_TYPES.CAR2:
-            break;
-        case CAR_TYPES.CAR2:
-            break;
+
+/**
+    param:  x - the x position of the car
+    param:  y - the y position of the row's y
+*/
+function Car(type, x, rowY, direction, speed){
+
+    Obstacle.call(this, x, rowY, direction, speed );
+    this.type = type;
+
+    this.update = function(){
+
+        Obstacle.prototype.update.call(this);
+
+        let ctx = myGameArea.context;
+        switch(this.type){
+            case CAR_TYPES.CAR1:
+
+                ctx.fillStyle = "#0B0407";
+                ctx.fillRect(this.x, this.rowY+2, 30, rowHeight - 4);
+                break;
+            case CAR_TYPES.CAR2:
+                ctx.fillStyle = "#B951F4";
+                ctx.fillRect(this.x, this.rowY+1, 30, rowHeight - 2);
+                break;
+            case CAR_TYPES.CAR3:
+                ctx.fillStyle = "#589522";
+                ctx.fillRect(this.x, this.rowY+2, 30, rowHeight - 4);
+                break;
+            case CAR_TYPES.CAR4:
+                ctx.fillStyle = "#DE53CF";
+                ctx.fillRect(this.x, this.rowY+4, 30, rowHeight - 8);
+                break;
+            case CAR_TYPES.CAR5:
+                ctx.fillStyle = "#FEFEFE";
+                ctx.fillRect(this.x, this.rowY+4, 30, rowHeight - 8);
+                break;
+        }
     }
 
-function Obstacle(rowIndex, x, direction, speed){
-    this.rowIndex = rowIndex;
+}
+Car.prototype = Object.create(Obstacle.prototype);
+
+function Pad(x, rowY, direction, speed){
+
+    Obstacle.call(this, x, rowY, direction, speed );
+
+    this.update = function(){
+
+        Obstacle.prototype.update.call(this);
+
+        let ctx = myGameArea.context;
+
+        ctx.fillStyle = "#A94D03";
+        // ctx.beginPath();
+        // ctx.ellipse(this.x, this.rowY, rowHeight+(rowHeight*0.3), rowHeight, 0, 0, 0); //x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise);
+        // ctx.stroke();
+        ctx.fillRect(this.x, this.rowY+4, 30, rowHeight - 8);
+
+    }
+      
+}
+Pad.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
+
+
+function Obstacle(x, rowY, direction, speed){
     this.x = x;
-    this.y = getRowY(this.rowIndex);
+    this.rowY = rowY;
     this.width = 10;
     this.height = 10;
     this.direction = direction;
     this.speed = speed;
-    this.update = function() {
-        ctx.fillStyle = "red";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        if(this.direction == LEFT){
-            this.x -= this.speed;
-            if(this.x < -WRAP_BUFFER){
-                this.x = canvasWidth + WRAP_BUFFER;
-            }
-        } else {
-            this.x += this.speed;
-            if(this.x > canvasWidth + WRAP_BUFFER ){
-                this.x = -WRAP_BUFFER;
-            }
-        }
-
-        if(this.x < 0){
-            this.x 
-        }
-
-
-    };
+    // this.update = function() {
+        
+    //     //Update x position, consider wrapping
+    //     if(this.direction == LEFT){
+    //         this.x -= this.speed;
+    //         if(this.x < -WRAP_BUFFER){
+    //             this.x = canvasWidth + WRAP_BUFFER;
+    //         }
+    //     } else {
+    //         this.x += this.speed;
+    //         if(this.x > canvasWidth + WRAP_BUFFER ){
+    //             this.x = -WRAP_BUFFER;
+    //         }
+    //     }
+    // };
 }
 
-function Car1(){
-    obstacle.call(this);
-
-    this.update = function(){
-        ctx.fillStyle = "red";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+Obstacle.prototype.update = function(){
+    //Update x position, consider wrapping
+    if(this.direction === LEFT){
+        this.x -= this.speed;
+        if(this.x < -WRAP_BUFFER){
+            this.x = canvasWidth + WRAP_BUFFER;
+        }
+    } else {
+        this.x += this.speed;
+        if(this.x > canvasWidth + WRAP_BUFFER ){
+            this.x = -WRAP_BUFFER;
+        }
     }
 }
-
-Car1.prototype = new Obstacle(); //or Object.create(Obstacle.prototype)
 
 function getRowY(rowIndex){
     return canvasHeight - (rowHeight * (rowIndex+1));
