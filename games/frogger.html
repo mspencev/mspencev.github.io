@@ -127,8 +127,6 @@ var myGameArea = {
 
 function Frog() {
     var me = this;
-    // this.type = type;
-    // this.score = 0;
     this.width = rowHeight;
     this.height = rowHeight;
     this.image = new Image();
@@ -138,43 +136,46 @@ function Frog() {
     this.update = function() {
         ctx = myGameArea.context;
 
+
         ctx.drawImage(this.image, 
         this.x, 
         this.y,
         this.width, this.height);
-        // ctx.stroke();
+    }
+    this.riverCheck = function() {
 
-        // ctx.fillStyle = "green";
-        // ctx.fillRect(me.x, me.y, me.width, me.height);
+        //Check if we're locked to a lilly pad or log (rows 7-12)
+        var rowIndex = getRowIndex(this.y);
 
+        var flowSpeed = 0;
+        var flowDirection = LEFT;
+        if(rows[rowIndex].intersects(this.x, this.y, this.width, this.height)){
+            flowSpeed = rows[rowIndex].getSpeed();
+            flowDirection = rows[rowIndex].getDirection();
+        }
+
+        if(flowDirection === LEFT){
+            this.x -= flowSpeed;
+            if(this.x < -this.width){
+                this.x = canvasWidth + this.width; //give a wrap buffer
+            }
+        } else {
+            this.x += flowSpeed;
+            if(this.x > canvasWidth + this.width ){
+                this.x = -this.width;
+            }
+        }
     }
-    this.newPos = function() {
-        // this.x += this.speedX;
-        // this.y += this.speedY + this.gravitySpeed;
-        this.hitBottom();
+
+    this.roadCheck = function() {
+
+        
     }
-    this.hitBottom = function() {
-        // var rockbottom = myGameArea.canvas.height - this.height;
-        // if (this.y > rockbottom) {
-        //     this.y = rockbottom;
-        //     this.gravitySpeed = 0;
-        // }
+
+    this.incrementX = function(xIncrement){
+        this.x += xIncrement;
     }
-    this.crashWith = function(otherobj) {
-        // var myleft = this.x;
-        // var myright = this.x + (this.width);
-        // var mytop = this.y;
-        // var mybottom = this.y + (this.height);
-        // var otherleft = otherobj.x;
-        // var otherright = otherobj.x + (otherobj.width);
-        // var othertop = otherobj.y;
-        // var otherbottom = otherobj.y + (otherobj.height);
-        // var crash = true;
-        // if ((mybottom < othertop) || (mytop > otherbottom) || (myright < otherleft) || (myleft > otherright)) {
-        //     crash = false;
-        // }
-        // return crash;
-    }
+    
 }
 
 function Row(rowIndex){
@@ -187,11 +188,6 @@ function Row(rowIndex){
 
 Row.prototype.update = function(){
     ctx = myGameArea.context;
-
-    // ctx.drawImage(this.image, 
-    // this.x, 
-    // this.y,
-    // this.width, this.height);
 
     ctx.fillStyle = this.getRowColor();
 
@@ -217,6 +213,10 @@ Row.prototype.getRowColor = function(){
         case 12:
             return "#0B009B"; 
     }
+}
+
+Row.prototype.intersects = function(x, y, width, height){
+    return false;
 }
 
 /**
@@ -254,6 +254,21 @@ function ObstacleRow(config){
         }
     }
 
+    this.intersects = function(x, y, width, height){
+        for(var i = 0; i < this.obstacles.length; ++i){
+            if(this.obstacles[i].intersects(x, y, width, height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    this.getSpeed = function(){
+        return this.speed;
+    }
+    this.getDirection = function(){
+        return this.direction;
+    }
 }
 ObstacleRow.prototype = Object.create(Row.prototype);
 
@@ -421,6 +436,7 @@ function Obstacle(x, rowY, direction, speed){
     this.height = 10;
     this.direction = direction;
     this.speed = speed;
+    this.hasFrog = false; //if the frog is riding this obstacle
     
 }
 Obstacle.prototype.getX = function(){
@@ -429,6 +445,7 @@ Obstacle.prototype.getX = function(){
 
 Obstacle.prototype.update = function(){
     //Update x position, consider wrapping
+    var originalX = this.x;
     if(this.direction === LEFT){
         this.x -= this.speed;
         if(this.x < -this.width){
@@ -440,22 +457,61 @@ Obstacle.prototype.update = function(){
             this.x = -this.width;
         }
     }
+
+    if(this.hasFrog){
+        frog.incrementX(this.x - originalX);
+    }
+}
+
+Obstacle.prototype.intersects = function(x, y, width, height){
+    return intersects(x, y, width, height, this.x, this.rowY, this.width, this.height);
+}
+
+function intersects(x1, y1, w1, h1, x2, y2, w2, h2){
+    
+    var buffer = 10;
+
+    var left = x1 + buffer;
+    var right = x1+w1 - buffer;
+    var top = y1 + buffer;
+    var bottom = y1+h1 - buffer;
+    var left2 = x2 + buffer;
+    var right2 = x2+w2 - buffer;
+    var top2 = y2 + buffer;
+    var bottom2 = y2+h2 - buffer;
+    
+    var horizontalIntersection = (bottom < top2 && bottom > bottom2) || (top > bottom2 && top < top2);
+    var verticalIntersection = (right > left2 && right < right2) || (left > left2 && left < right2);
+
+    // console.log("H Inte: left/right/top/bottom /2 = ", left, right, top, bottom, left2, right2, top2, bottom2);
+    // console.log("H intersect = ", horizontalIntersection);
+    // console.log("V intersect = ", verticalIntersection);
+
+    return horizontalIntersection || verticalIntersection;
+
 }
 
 function getRowY(rowIndex){
     return canvasHeight - (rowHeight * (rowIndex+1));
 }
 
+function getRowIndex(y){
+
+    console.log("y = ", y, ", rowHight = ", rowHeight, ", index = ", Math.floor(y/rowHeight));
+    return Math.floor(y/rowHeight);
+}
+
 function refreshGameArea() {
 
 
-    if (myGameArea.key && myGameArea.key == 37) {frog.x -= jumpSize; console.log("Frog.x = ", frog.x); }
+    if (myGameArea.key && myGameArea.key == 37) {frog.x -= jumpSize; console.log("Frog.x = ", frog.x);}
     if (myGameArea.key && myGameArea.key == 39) {frog.x += jumpSize; console.log("Frog.x = ", frog.x);}
     if (myGameArea.key && myGameArea.key == 38) {frog.y -= jumpSize; console.log("Frog.y = ", frog.y);}
     if (myGameArea.key && myGameArea.key == 40) {frog.y += jumpSize; console.log("Frog.y = ", frog.y);}
 
     //The refresh will happen multiple times before the key-up listener is fired, so we'll prevent multiple hops in one key click.
     myGameArea.key = false;
+
 
 
     // var x, height, gap, minHeight, maxHeight, minGap, maxGap;
@@ -470,7 +526,7 @@ function refreshGameArea() {
         rows[i].update();
     }
 
-    frog.newPos();
+    frog.riverCheck();
     frog.update();
 
 }
