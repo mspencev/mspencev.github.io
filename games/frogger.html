@@ -145,13 +145,13 @@ function Frog() {
     this.riverCheck = function() {
 
         //Check if we're locked to a lilly pad or log (rows 7-12)
-        var rowIndex = getRowIndex(this.y);
+        var currentRow = getRow(this.y);
 
         var flowSpeed = 0;
         var flowDirection = LEFT;
-        if(rows[rowIndex].intersects(this.x, this.y, this.width, this.height)){
-            flowSpeed = rows[rowIndex].getSpeed();
-            flowDirection = rows[rowIndex].getDirection();
+        if(currentRow.intersectsWithObstacle(this.x, this.y, this.width, this.height)){
+            flowSpeed = currentRow.getSpeed();
+            flowDirection = currentRow.getDirection();
         }
 
         if(flowDirection === LEFT){
@@ -184,6 +184,10 @@ function Row(rowIndex){
     this.rowIndex = rowIndex;
     this.x = 0;
     this.y = getRowY(rowIndex);
+
+    this.containsY = function(y){
+        return y >= this.y && y <= (this.y + rowHeight);
+    }
 }
 
 Row.prototype.update = function(){
@@ -215,7 +219,7 @@ Row.prototype.getRowColor = function(){
     }
 }
 
-Row.prototype.intersects = function(x, y, width, height){
+Row.prototype.intersectsWithObstacle = function(x, y, width, height){
     return false;
 }
 
@@ -254,7 +258,7 @@ function ObstacleRow(config){
         }
     }
 
-    this.intersects = function(x, y, width, height){
+    this.intersectsWithObstacle = function(x, y, width, height){
         for(var i = 0; i < this.obstacles.length; ++i){
             if(this.obstacles[i].intersects(x, y, width, height)) {
                 return true;
@@ -489,6 +493,16 @@ function intersects(x1, y1, w1, h1, x2, y2, w2, h2){
 
     return horizontalIntersection || verticalIntersection;
 
+}
+
+function getRow(y){
+    for(var i = 0; i < rows.length; ++i){
+        if(rows[i].containsY(y)){
+            return rows[i];
+        }
+    }
+    console.error("Failed to find row for y: " + y);
+    return null;
 }
 
 function getRowY(rowIndex){
