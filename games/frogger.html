@@ -32,6 +32,13 @@ var CAR_TYPES = {
     CAR5: 4,
 }   
 
+var ROW_TYPE = {
+    SAFE: 0,
+    ROAD: 1,
+    RIVER: 2,
+    HOME: 3
+}
+
 var LOG_WIDTH = {
     SHORT: 40,
     MEDIUM: 160,
@@ -51,53 +58,53 @@ var jumpSize = canvasHeight / numRows;
 
 function startGame() {
     frog = new Frog();
-    rows.push(new Row(0));
+    rows.push(new Row(0, ROW_TYPE.SAFE));
 
     rows.push(new ObstacleRow( {
-        rowIndex: 1,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR1, 
+        rowIndex: 1, type: ROW_TYPE.ROAD, obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR1, 
         direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 460  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 2,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR2, 
+        rowIndex: 2, type: ROW_TYPE.ROAD,   obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR2, 
         direction: RIGHT, speed: 7, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 260  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 3,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR3, 
+        rowIndex: 3, type: ROW_TYPE.ROAD,   obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR3, 
         direction: LEFT, speed: 4, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 400  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 4,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR4, 
+        rowIndex: 4, type: ROW_TYPE.ROAD,   obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR4, 
         direction: RIGHT, speed: 14, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 450  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 5,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
+        rowIndex: 5, type: ROW_TYPE.ROAD,   obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
         direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 320  
     })); 
     
-    rows.push(new Row(6));
+    rows.push(new Row(6, ROW_TYPE.SAFE));
     
     rows.push(new ObstacleRow( {
-        rowIndex: 7,   type: OBSTACLE_TYPES.PAD,  extraArg: undefined, 
+        rowIndex: 7, type: ROW_TYPE.RIVER,  obstType: OBSTACLE_TYPES.PAD,  extraArg: undefined, 
         direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 3, spaceBetweenObstacles: 80, spaceBetweenGroups: 250  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 8,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.SHORT, 
+        rowIndex: 8, type: ROW_TYPE.RIVER,   obstType: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.SHORT, 
         direction: RIGHT, speed: 8, numGroups: 2, obstaclesPerGroup: 2, spaceBetweenObstacles: 40, spaceBetweenGroups: 30  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 9,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.LONG, 
+        rowIndex: 9, type: ROW_TYPE.RIVER,   obstType: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.LONG, 
         direction: LEFT, speed: 4, numGroups: 1, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 10,   type: OBSTACLE_TYPES.PAD,  extraArg: undefined,  
+        rowIndex: 10, type: ROW_TYPE.RIVER,   obstType: OBSTACLE_TYPES.PAD,  extraArg: undefined,  
         direction: RIGHT, speed: 2, numGroups: 2, obstaclesPerGroup: 2, spaceBetweenObstacles: 80, spaceBetweenGroups: 250  
     })); 
     rows.push(new ObstacleRow( {
-        rowIndex: 11,   type: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.MEDIUM, 
+        rowIndex: 11, type: ROW_TYPE.RIVER,   obstType: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.MEDIUM, 
         direction: LEFT, speed: 5, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: canvasWidth/2  
     })); 
     
-    rows.push(new Row(12 ));
+    rows.push(new Row(12, ROW_TYPE.HOME));
 
     // myScore = new component("30px", "Consolas", "black", 280, 40, "text");
     myGameArea.start();
@@ -150,19 +157,24 @@ function Frog() {
         var flowSpeed = 0;
         var flowDirection = LEFT;
         if(currentRow.intersectsWithObstacle(this.x, this.y, this.width, this.height)){
-            flowSpeed = currentRow.getSpeed();
-            flowDirection = currentRow.getDirection();
-        }
+            if(currentRow.getType() === ROW_TYPE.RIVER){
+                flowSpeed = currentRow.getSpeed();
+                flowDirection = currentRow.getDirection();
 
-        if(flowDirection === LEFT){
-            this.x -= flowSpeed;
-            if(this.x < -this.width){
-                this.x = canvasWidth + this.width; //give a wrap buffer
-            }
-        } else {
-            this.x += flowSpeed;
-            if(this.x > canvasWidth + this.width ){
-                this.x = -this.width;
+                if(flowDirection === LEFT){
+                    this.x -= flowSpeed;
+                    if(this.x < -this.width){
+                        this.x = canvasWidth + this.width; //give a wrap buffer
+                    }
+                } else {
+                    this.x += flowSpeed;
+                    if(this.x > canvasWidth + this.width ){
+                        this.x = -this.width;
+                    }
+                }
+            } 
+            else if(currentRow.getType() === ROW_TYPE.ROAD){
+                this.image.src = 'deadFrog.png';
             }
         }
     }
@@ -178,9 +190,9 @@ function Frog() {
     
 }
 
-function Row(rowIndex){
+function Row(rowIndex, type){
 
-    var me = this;
+    this.rowType = type;
     this.rowIndex = rowIndex;
     this.x = 0;
     this.y = getRowY(rowIndex);
@@ -225,15 +237,15 @@ Row.prototype.intersectsWithObstacle = function(x, y, width, height){
 
 /**
 param:  config -  {
-        rowIndex: 5,   type: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
+        rowIndex: 5, type: ROW_TYPE.RIVER, obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
         direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
     }
 */
 function ObstacleRow(config){
 
-    Row.call(this, config.rowIndex);
+    Row.call(this, config.rowIndex, config.type);
 
-    this.obstacleType = config.type;
+    this.obstacleType = config.obstType;
     this.direction = config.direction;
     this.speed = config.speed;
     this.obstacles = [];
@@ -272,6 +284,10 @@ function ObstacleRow(config){
     }
     this.getDirection = function(){
         return this.direction;
+    }
+
+    this.getType = function(){
+        return this.rowType;
     }
 }
 ObstacleRow.prototype = Object.create(Row.prototype);
