@@ -51,6 +51,8 @@ var numRows = 13; // 5 street, 5 river, start, middle, end
 
 var frog;
 var rows = [];
+var livesLeft = 3;
+var homeFrogs = [];
 // var myObstacles = [];
 // var myScore;
 
@@ -106,7 +108,7 @@ function startGame() {
         direction: LEFT, speed: 5, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: canvasWidth/2  
     })); 
     
-    rows.push(new Row(12, ROW_TYPE.HOME));
+    rows.push(new HomeRow(12, ROW_TYPE.HOME));
 
     // myScore = new component("30px", "Consolas", "black", 280, 40, "text");
     myGameArea.start();
@@ -120,6 +122,7 @@ var myGameArea = {
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
         this.frameNo = 0;
+        resetGame();
         this.interval = setInterval(refreshGameArea, 50);
         window.addEventListener('keydown', function (e) {
             myGameArea.key = e.keyCode;
@@ -149,7 +152,6 @@ function Frog() {
 
         me.isDead = false;
     }
-    this.reset();
 
     this.update = function() {
         ctx = myGameArea.context;
@@ -206,14 +208,16 @@ function Frog() {
     this.frogDies = function(){
         this.image.src = 'deadFrog.png';
         this.isDead = true;
-        setTimeout(this.reset, 2200)
+        setTimeout(this.reset, 2200);
+        livesLeft -=1;
+        updateLives();
 
     }
 
     this.frogGetsHome = function(){
-        this.image.src = 'homeFrog.png';
+        homeFrogs.push(new HomeFrog(this.x, this.y, this.width, this.height));
         this.isDead = true;
-        setTimeout(this.reset, 2200);
+        this.reset();
     }
 
     this.moveX = function(increment){
@@ -266,6 +270,27 @@ function Frog() {
     }
 }
 
+function HomeFrog(x, y, width, height){
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.image = new Image();
+    this.image.src = "homeFrog.png";
+
+    this.update = function(){
+        ctx = myGameArea.context;
+
+
+        ctx.drawImage(this.image, 
+        this.x, 
+        this.y,
+        this.width, this.height);
+    }
+
+}
+
+
 function Row(rowIndex, type){
 
     this.rowType = type;
@@ -273,17 +298,11 @@ function Row(rowIndex, type){
     this.x = 0;
     this.y = getRowY(rowIndex);
 
-    this.containsY = function(y){
-        return y >= this.y && y <= (this.y + rowHeight);
-    }
+    
 }
 
-Row.prototype.update = function(){
-    ctx = myGameArea.context;
-
-    ctx.fillStyle = this.getRowColor();
-
-    ctx.fillRect(this.x, this.y, canvasWidth, rowHeight);
+Row.prototype.containsY = function(y){
+    return y >= this.y && y <= (this.y + rowHeight);
 }
 
 Row.prototype.getRowColor = function(){
@@ -307,6 +326,14 @@ Row.prototype.getRowColor = function(){
     }
 }
 
+Row.prototype.update = function(){
+    ctx = myGameArea.context;
+
+    ctx.fillStyle = this.getRowColor();
+
+    ctx.fillRect(this.x, this.y, canvasWidth, rowHeight);
+}
+
 Row.prototype.intersectsWithObstacle = function(x, y, width, height){
     return false;
 }
@@ -314,6 +341,30 @@ Row.prototype.intersectsWithObstacle = function(x, y, width, height){
 Row.prototype.getType = function(){
     return this.rowType;
 }
+
+function HomeRow(rowIndex, type){
+
+    Row.call(this, rowIndex, type);
+
+    this.numHomeSpots = 5;
+    this.wallWidth = canvasWidth/this.numHomeSpots/2;
+
+    this.update = function() {
+        ctx = myGameArea.context;
+
+        Row.prototype.update.call(this);
+
+        var wallX = 0;
+        for(var i = 0; i < this.numHomeSpots; ++i){
+            ctx.fillStyle = '#599213';
+
+            ctx.fillRect(wallX, this.y, this.wallWidth, rowHeight);
+            wallX +=2*this.wallWidth;
+        }
+    }
+}
+HomeRow.prototype = Object.create(Row.prototype);
+
 /**
 param:  config -  {
         rowIndex: 5, type: ROW_TYPE.RIVER, obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
@@ -620,8 +671,12 @@ function refreshGameArea() {
     // }
     myGameArea.clear();
     
-    for (i = 0; i < rows.length; i += 1) {
+    for (var i = 0; i < rows.length; i += 1) {
         rows[i].update();
+    }
+
+    for(var h = 0; h < homeFrogs.length; h += 1){
+        homeFrogs[h].update();
     }
 
     frog.obstacleCheck();
@@ -629,8 +684,25 @@ function refreshGameArea() {
 
 }
 
+function resetGame(){
+    frog.reset();
+    livesLeft = 3;
+    updateLives();
+}
+
+function updateLives(){
+    document.getElementById("livesLeft").innerHTML = livesLeft;
+
+}
+
+
 
 </script>
+
+<div style="text-align:left;width:880px;">
+  Lives: <span id="livesLeft"></span><br><br>
+  <button onclick="resetGame()" >Reset</button><br><br>
+</div>
 
 </body>
 </html>
