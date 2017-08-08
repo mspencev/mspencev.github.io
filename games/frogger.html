@@ -169,6 +169,12 @@ function Frog() {
 
         var currentRow = getRow(this.y);
 
+        if(currentRow.getType() === ROW_TYPE.HOME){
+            this.frogGetsHome();
+            return;
+            
+        }
+
         var flowSpeed = 0;
         var flowDirection = LEFT;
         var intersects = currentRow.intersectsWithObstacle(this.x, this.y, this.width, this.height)
@@ -202,6 +208,12 @@ function Frog() {
         this.isDead = true;
         setTimeout(this.reset, 2200)
 
+    }
+
+    this.frogGetsHome = function(){
+        this.image.src = 'homeFrog.png';
+        this.isDead = true;
+        setTimeout(this.reset, 2200);
     }
 
     this.moveX = function(increment){
