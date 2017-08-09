@@ -20,6 +20,8 @@ var RIGHT = 1;
 var UP = 2;
 var DOWN = 3;
 
+var NUM_LIVES = 3;
+
 var OBSTACLE_TYPES = {
     CAR: 0,
     PAD: 1,
@@ -51,8 +53,8 @@ var numRows = 13; // 5 street, 5 river, start, middle, end
 
 var frog;
 var rows = [];
-var livesLeft = 3;
 var homeFrogs = [];
+var lives;
 // var myObstacles = [];
 // var myScore;
 
@@ -62,6 +64,7 @@ var jumpSize = canvasHeight / numRows;
 
 function startGame() {
     frog = new Frog();
+    lives = new Lives();
     rows.push(new Row(0, ROW_TYPE.SAFE));
 
     rows.push(new ObstacleRow( {
@@ -133,7 +136,38 @@ var myGameArea = {
     },
     clear : function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    isGameOver: false,
+
+    gameOver: function(){
+        this.isGameOver = true;
+        this.showGameOverText();
+    },
+
+    reset: function(){
+        this.isGameOver = false;
+    },
+
+    showGameOverText: function(){
+        ctx = myGameArea.context;
+
+        // ctx.font = "small-caps bolder 110px Verdana";
+        // ctx.fillStyle = "green";
+        // ctx.textAlign = "center";
+        // ctx.fillText("Game Over", canvasWidth/2, canvasHeight/2); 
+        var text = 'Game Over';
+        var x = canvasWidth/2;
+        var y = canvasHeight/2;
+        ctx.font = "small-caps bolder 110px Sans-serif"
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 10;
+        ctx.textAlign = "center";
+        ctx.strokeText(text, x, y);
+        ctx.fillStyle = 'green';
+        ctx.fillText(text, x, y);
     }
+
+
     
 }
 
@@ -209,8 +243,7 @@ function Frog() {
         this.image.src = 'deadFrog.png';
         this.isDead = true;
         setTimeout(this.reset, 2200);
-        livesLeft -=1;
-        updateLives();
+        lives.decrement();
 
     }
 
@@ -652,6 +685,9 @@ function getRowIndex(y){
 
 function refreshGameArea() {
 
+    if(myGameArea.isGameOver){
+        return;
+    }
 
     if (myGameArea.key && myGameArea.key == 37) {frog.moveX(-jumpSize);}
     if (myGameArea.key && myGameArea.key == 39) {frog.moveX(jumpSize);}
@@ -661,14 +697,6 @@ function refreshGameArea() {
     //The refresh will happen multiple times before the key-up listener is fired, so we'll prevent multiple hops in one key click.
     myGameArea.key = false;
 
-
-
-    // var x, height, gap, minHeight, maxHeight, minGap, maxGap;
-    // for (i = 0; i < myObstacles.length; i += 1) {
-    //     if (myGamePiece.crashWith(myObstacles[i])) {
-    //         return;
-    //     } 
-    // }
     myGameArea.clear();
     
     for (var i = 0; i < rows.length; i += 1) {
@@ -686,12 +714,30 @@ function refreshGameArea() {
 
 function resetGame(){
     frog.reset();
-    livesLeft = 3;
-    updateLives();
+    lives.reset();
+    myGameArea.reset();
 }
 
-function updateLives(){
-    document.getElementById("livesLeft").innerHTML = livesLeft;
+function Lives(){
+    this.numLives = NUM_LIVES;
+    this.reset = function(){
+        this.numLives = NUM_LIVES;
+        this.updateLivesLabel();
+    }
+    this.decrement = function(){
+        this.numLives -= 1;
+        this.updateLivesLabel();
+        if(this.numLives === 0){
+            myGameArea.gameOver();
+        }
+    }
+
+    this.updateLivesLabel = function(){
+        document.getElementById("livesLeft").innerHTML = this.numLives;
+    }
+
+    this.updateLivesLabel();
+
 
 }
 
