@@ -7,6 +7,11 @@
     border:20px solid #59921E;
     background-color: #f1f1f1;
 } */
+
+body {
+    background-color: #59921E;
+}
+
 </style>
 </head>
 <body onload="startGame()">
@@ -149,14 +154,6 @@ var myGameArea = {
         this.context.clearRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
 
         var ctx = this.timerCanvas.getContext('2d');
-
-        // //Draw background
-        // ctx.fillStyle = '#59921E';
-        // ctx.fillRect(0, 0, this.timerCanvas.width, this.timerCanvas.height);
-
-        // //Draw timer
-        // ctx.fillStyle = 'black';
-        // ctx.fillRect(0, this.timerCanvas.height/2, this.gameCanvas.width, 10);
 
     },
     isGameOver: false,
