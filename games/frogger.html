@@ -27,6 +27,8 @@ var DOWN = 3;
 
 var NUM_LIVES = 3;
 
+var NUM_HOME_SPOTS = 1;
+
 var OBSTACLE_TYPES = {
     CAR: 0,
     PAD: 1,
@@ -128,6 +130,8 @@ var myGameArea = {
     gameCanvas : document.createElement("canvas"),
     timerCanvas : document.createElement("canvas"),
 
+    level: 1,
+
     start : function() {
         this.gameCanvas.id = 'gameCanvas'
         this.gameCanvas.width = canvasWidth;
@@ -136,10 +140,7 @@ var myGameArea = {
         this.gameCanvas.style.border = '20px solid #59921E';
         this.gameCanvas.style.backgroundcolor =  '#f1f1f1';
 
-        
-
         document.body.insertBefore(this.gameCanvas, document.body.childNodes[0]);
-        // document.body.insertBefore(this.timerCanvas, document.body.childNodes[1]);
 
         resetGame();
         this.interval = setInterval(refreshGameArea, 50);
@@ -168,7 +169,6 @@ var myGameArea = {
     },
 
     showGameOverText: function(){
-        // ctx = myGameArea.context;
 
         var text = 'Game Over';
         var x = canvasWidth/2;
@@ -180,8 +180,12 @@ var myGameArea = {
         this.context.strokeText(text, x, y);
         this.context.fillStyle = 'green';
         this.context.fillText(text, x, y);
+    },
+
+    newLevel: function(){
+        this.level += 1;
+        homeFrogs = [];
     }
-    
 }
 
 
@@ -195,9 +199,9 @@ function TimerCanvas(){
 
     this.canvas.id = 'timerCanvas'
     this.canvas.width = canvasWidth;
-    this.canvas.height = 50;
+    this.canvas.height = 30;
     this.timerContext = this.canvas.getContext("2d");
-    this.canvas.style.border = '20px solid #59921E';
+    this.canvas.style.border = '2px solid #59921E';
     this.canvas.style.backgroundcolor =  '#f1f1f1';
 
     this.timerLength = this.canvas.width;
@@ -231,7 +235,7 @@ function TimerCanvas(){
     };
 
     this.decrementTime = function(){
-        this.timerLength -= 0.5;
+        this.timerLength -= 0.5*myGameArea.level;
 
         if(this.timerLength === 0){
             frog.frogDies();
@@ -291,9 +295,9 @@ function Frog() {
                 flowDirection = currentRow.getDirection();
 
                 if(flowDirection === LEFT){
-                    this.moveX(-flowSpeed);                   
+                    this.moveX(-flowSpeed*myGameArea.level);                   
                 } else {
-                    this.moveX(flowSpeed);                    
+                    this.moveX(flowSpeed*myGameArea.level);                    
                 }
             } else {
                 //Landed in the water!
@@ -321,6 +325,10 @@ function Frog() {
         homeFrogs.push(new HomeFrog(this.x, this.y, this.width, this.height));
         this.isDead = true;
         this.reset();
+
+        if(homeFrogs.length === NUM_HOME_SPOTS){
+            myGameArea.newLevel();
+        }
     }
 
     this.moveX = function(increment){
@@ -449,7 +457,7 @@ function HomeRow(rowIndex, type){
 
     Row.call(this, rowIndex, type);
 
-    this.numHomeSpots = 5;
+    this.numHomeSpots = NUM_HOME_SPOTS;
     this.wallWidth = canvasWidth/this.numHomeSpots/2;
 
     this.update = function() {
@@ -692,12 +700,12 @@ Obstacle.prototype.update = function(){
     //Update x position, consider wrapping
     var originalX = this.x;
     if(this.direction === LEFT){
-        this.x -= this.speed;
+        this.x -= this.speed*myGameArea.level;
         if(this.x < -this.width){
             this.x = canvasWidth + this.width; //give a wrap buffer
         }
     } else {
-        this.x += this.speed;
+        this.x += this.speed*myGameArea.level;
         if(this.x > canvasWidth + this.width ){
             this.x = -this.width;
         }
