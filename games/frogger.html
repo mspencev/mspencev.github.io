@@ -3,10 +3,10 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
-canvas {
+/* canvas {
     border:20px solid #59921E;
     background-color: #f1f1f1;
-}
+} */
 </style>
 </head>
 <body onload="startGame()">
@@ -20,7 +20,7 @@ var RIGHT = 1;
 var UP = 2;
 var DOWN = 3;
 
-var NUM_LIVES = 3;
+var NUM_LIVES = 1;
 
 var OBSTACLE_TYPES = {
     CAR: 0,
@@ -55,6 +55,7 @@ var frog;
 var rows = [];
 var homeFrogs = [];
 var lives;
+// var timerCanvas;
 // var myObstacles = [];
 // var myScore;
 
@@ -65,6 +66,7 @@ var jumpSize = canvasHeight / numRows;
 function startGame() {
     frog = new Frog();
     lives = new Lives();
+    // timerCanvas = new TimerCanvas();
     rows.push(new Row(0, ROW_TYPE.SAFE));
 
     rows.push(new ObstacleRow( {
@@ -115,16 +117,31 @@ function startGame() {
 
     // myScore = new component("30px", "Consolas", "black", 280, 40, "text");
     myGameArea.start();
+    // timerCanvas.start();
 }
 
 var myGameArea = {
-    canvas : document.createElement("canvas"),
+    gameCanvas : document.createElement("canvas"),
+    timerCanvas : document.createElement("canvas"),
+
     start : function() {
-        this.canvas.width = canvasWidth;
-        this.canvas.height = canvasHeight;
-        this.context = this.canvas.getContext("2d");
-        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-        this.frameNo = 0;
+        this.gameCanvas.id = 'gameCanvas'
+        this.gameCanvas.width = canvasWidth;
+        this.gameCanvas.height = canvasHeight;
+        this.context = this.gameCanvas.getContext("2d");
+        this.gameCanvas.style.border = '20px solid #59921E';
+        this.gameCanvas.style.backgroundcolor =  '#f1f1f1';
+
+        this.timerCanvas.id = 'timerCanvas'
+        this.timerCanvas.width = canvasWidth;
+        this.timerCanvas.height = 50;
+        this.timerContext = this.timerCanvas.getContext("2d");
+        this.timerCanvas.style.border = '20px solid #59921E';
+        this.timerCanvas.style.backgroundcolor =  '#f1f1f1';
+
+        document.body.insertBefore(this.gameCanvas, document.body.childNodes[0]);
+        document.body.insertBefore(this.timerCanvas, document.body.childNodes[1]);
+
         resetGame();
         this.interval = setInterval(refreshGameArea, 50);
         window.addEventListener('keydown', function (e) {
@@ -135,7 +152,18 @@ var myGameArea = {
         })    
     },
     clear : function() {
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.context.clearRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
+
+        var ctx = this.timerCanvas.getContext('2d');
+
+        //Draw background
+        ctx.fillStyle = '#59921E';
+        ctx.fillRect(0, 0, this.timerCanvas.width, this.timerCanvas.height);
+
+        //Draw timer
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, this.timerCanvas.height/2, this.gameCanvas.width, 10);
+
     },
     isGameOver: false,
 
@@ -149,27 +177,88 @@ var myGameArea = {
     },
 
     showGameOverText: function(){
-        ctx = myGameArea.context;
+        // ctx = myGameArea.context;
 
-        // ctx.font = "small-caps bolder 110px Verdana";
-        // ctx.fillStyle = "green";
-        // ctx.textAlign = "center";
-        // ctx.fillText("Game Over", canvasWidth/2, canvasHeight/2); 
         var text = 'Game Over';
         var x = canvasWidth/2;
         var y = canvasHeight/2;
-        ctx.font = "small-caps bolder 110px Sans-serif"
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 10;
-        ctx.textAlign = "center";
-        ctx.strokeText(text, x, y);
-        ctx.fillStyle = 'green';
-        ctx.fillText(text, x, y);
+        this.context.font = "small-caps bolder 110px Sans-serif"
+        this.context.strokeStyle = 'black';
+        this.context.lineWidth = 10;
+        this.context.textAlign = "center";
+        this.context.strokeText(text, x, y);
+        this.context.fillStyle = 'green';
+        this.context.fillText(text, x, y);
     }
-
-
     
 }
+
+// var timerCanvas = {
+//     canvas : document.createElement("canvas"),
+//     start : function() {
+//         this.canvas.id = 'timerCanvas'
+//         this.canvas.width = canvasWidth;
+//         this.canvas.height = 50;
+//         this.context = this.canvas.getContext("2d");
+//         this.canvas.style.border = '20px solid #59921E';
+//         this.canvas.style.backgroundcolor =  '#f1f1f1';
+
+//         document.body.insertBefore(this.canvas, document.body.childNodes[1]);
+
+//     },
+//     clear : function() {
+//         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+//     },
+
+   
+
+//     reset: function(){
+//         this.isGameOver = false;
+//     },
+
+//    update: function(){
+//         this.clear();
+
+//         // this.context.fillStyle = 'red'; //#599213';
+//         // this.context.fillRect(this.x, this.y, this.canvas.width, this.canvas.height);
+
+//         var ctx = this.canvas.getContext('2d');
+//         ctx.fillStyle = 'black';
+//         ctx.fillRect(this.x, this.y + (this.canvas.height/2), this.canvas.width, 20);
+
+//    } 
+// }
+
+// function TimerCanvas(){
+//     this.x = 0;
+//     this.y = canvasHeight;
+    
+//     this.timerLength = 300;
+
+//     this.canvas = document.createElement('canvas'),
+//     this.canvas.id = 'timerCanvas';
+//     this.context = this.canvas.getContext('2d');
+
+//     this.canvas.width = canvasWidth;
+//     this.canvas.height = 50;
+//     this.canvas.style.border = '20px solid #59921E';
+
+
+//     // var gameCanvas = document.getElementById('gameCanvas');
+//     // gameCanvas.parentNode.insertBefore(this.canvas, gameCanvas.nextSibling);
+//     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+
+//     this.update = function(){
+//         debugger;
+//         this.context.fillStyle = 'red'; //#599213';
+//         this.context.fillRect(this.x, this.y, this.canvas.width, this.canvas.height);
+
+//         var ctx = this.canvas.getContext('2d');
+//         ctx.fillStyle = 'black';
+//         ctx.fillRect(this.x, this.y + (this.canvas.height/2), this.canvas.width, 20);
+
+//     }
+// }
 
 function Frog() {
     var me = this;
@@ -479,7 +568,6 @@ function Car(x, rowY, direction, speed, type){
     this.type = type;
 
     this.image = new Image();
-    this.image.src = undefined;
 
     this.update = function(){
 
@@ -698,6 +786,7 @@ function refreshGameArea() {
     myGameArea.key = false;
 
     myGameArea.clear();
+    // timerCanvas.update();
     
     for (var i = 0; i < rows.length; i += 1) {
         rows[i].update();
@@ -737,8 +826,6 @@ function Lives(){
     }
 
     this.updateLivesLabel();
-
-
 }
 
 
