@@ -20,7 +20,7 @@ var RIGHT = 1;
 var UP = 2;
 var DOWN = 3;
 
-var NUM_LIVES = 1;
+var NUM_LIVES = 3;
 
 var OBSTACLE_TYPES = {
     CAR: 0,
@@ -55,7 +55,7 @@ var frog;
 var rows = [];
 var homeFrogs = [];
 var lives;
-// var timerCanvas;
+var timerCanvas;
 // var myObstacles = [];
 // var myScore;
 
@@ -66,7 +66,7 @@ var jumpSize = canvasHeight / numRows;
 function startGame() {
     frog = new Frog();
     lives = new Lives();
-    // timerCanvas = new TimerCanvas();
+    timerCanvas = new TimerCanvas();
     rows.push(new Row(0, ROW_TYPE.SAFE));
 
     rows.push(new ObstacleRow( {
@@ -117,7 +117,6 @@ function startGame() {
 
     // myScore = new component("30px", "Consolas", "black", 280, 40, "text");
     myGameArea.start();
-    // timerCanvas.start();
 }
 
 var myGameArea = {
@@ -132,15 +131,10 @@ var myGameArea = {
         this.gameCanvas.style.border = '20px solid #59921E';
         this.gameCanvas.style.backgroundcolor =  '#f1f1f1';
 
-        this.timerCanvas.id = 'timerCanvas'
-        this.timerCanvas.width = canvasWidth;
-        this.timerCanvas.height = 50;
-        this.timerContext = this.timerCanvas.getContext("2d");
-        this.timerCanvas.style.border = '20px solid #59921E';
-        this.timerCanvas.style.backgroundcolor =  '#f1f1f1';
+        
 
         document.body.insertBefore(this.gameCanvas, document.body.childNodes[0]);
-        document.body.insertBefore(this.timerCanvas, document.body.childNodes[1]);
+        // document.body.insertBefore(this.timerCanvas, document.body.childNodes[1]);
 
         resetGame();
         this.interval = setInterval(refreshGameArea, 50);
@@ -156,13 +150,13 @@ var myGameArea = {
 
         var ctx = this.timerCanvas.getContext('2d');
 
-        //Draw background
-        ctx.fillStyle = '#59921E';
-        ctx.fillRect(0, 0, this.timerCanvas.width, this.timerCanvas.height);
+        // //Draw background
+        // ctx.fillStyle = '#59921E';
+        // ctx.fillRect(0, 0, this.timerCanvas.width, this.timerCanvas.height);
 
-        //Draw timer
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, this.timerCanvas.height/2, this.gameCanvas.width, 10);
+        // //Draw timer
+        // ctx.fillStyle = 'black';
+        // ctx.fillRect(0, this.timerCanvas.height/2, this.gameCanvas.width, 10);
 
     },
     isGameOver: false,
@@ -193,72 +187,60 @@ var myGameArea = {
     
 }
 
-// var timerCanvas = {
-//     canvas : document.createElement("canvas"),
-//     start : function() {
-//         this.canvas.id = 'timerCanvas'
-//         this.canvas.width = canvasWidth;
-//         this.canvas.height = 50;
-//         this.context = this.canvas.getContext("2d");
-//         this.canvas.style.border = '20px solid #59921E';
-//         this.canvas.style.backgroundcolor =  '#f1f1f1';
 
-//         document.body.insertBefore(this.canvas, document.body.childNodes[1]);
+function TimerCanvas(){
+    this.x = 0;
+    this.y = canvasHeight;
 
-//     },
-//     clear : function() {
-//         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-//     },
+    this.canvas = document.createElement('canvas'),
+    this.canvas.id = 'timerCanvas';
+    this.context = this.canvas.getContext('2d');
 
-   
+    this.canvas.id = 'timerCanvas'
+    this.canvas.width = canvasWidth;
+    this.canvas.height = 50;
+    this.timerContext = this.canvas.getContext("2d");
+    this.canvas.style.border = '20px solid #59921E';
+    this.canvas.style.backgroundcolor =  '#f1f1f1';
 
-//     reset: function(){
-//         this.isGameOver = false;
-//     },
+    this.timerLength = this.canvas.width;
 
-//    update: function(){
-//         this.clear();
+    // var gameCanvas = document.getElementById('gameCanvas');
+    // gameCanvas.parentNode.insertBefore(this.canvas, gameCanvas.nextSibling);
+    document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
-//         // this.context.fillStyle = 'red'; //#599213';
-//         // this.context.fillRect(this.x, this.y, this.canvas.width, this.canvas.height);
+    this.update = function(){
 
-//         var ctx = this.canvas.getContext('2d');
-//         ctx.fillStyle = 'black';
-//         ctx.fillRect(this.x, this.y + (this.canvas.height/2), this.canvas.width, 20);
+        var ctx = this.canvas.getContext('2d');
 
-//    } 
-// }
+        //Clear the whole canvas
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-// function TimerCanvas(){
-//     this.x = 0;
-//     this.y = canvasHeight;
-    
-//     this.timerLength = 300;
+        //Draw the background
+        ctx.fillStyle = '#599213';
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-//     this.canvas = document.createElement('canvas'),
-//     this.canvas.id = 'timerCanvas';
-//     this.context = this.canvas.getContext('2d');
+        this.decrementTime();
 
-//     this.canvas.width = canvasWidth;
-//     this.canvas.height = 50;
-//     this.canvas.style.border = '20px solid #59921E';
+        //Draw the timer line
+        ctx.fillStyle = 'black';
+        ctx.clearRect(this.x, this.canvas.height/2, this.timerLength, 10);
+        ctx.fillRect(this.x, this.canvas.height/2, this.timerLength, 10);
 
+    };
 
-//     // var gameCanvas = document.getElementById('gameCanvas');
-//     // gameCanvas.parentNode.insertBefore(this.canvas, gameCanvas.nextSibling);
-//     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+    this.reset = function(){
+        this.timerLength = this.canvas.width;
+    };
 
-//     this.update = function(){
-//         debugger;
-//         this.context.fillStyle = 'red'; //#599213';
-//         this.context.fillRect(this.x, this.y, this.canvas.width, this.canvas.height);
+    this.decrementTime = function(){
+        this.timerLength -= 1;
 
-//         var ctx = this.canvas.getContext('2d');
-//         ctx.fillStyle = 'black';
-//         ctx.fillRect(this.x, this.y + (this.canvas.height/2), this.canvas.width, 20);
-
-//     }
-// }
+        if(this.timerLength === 0){
+            frog.frogDies();
+        }
+    };
+}
 
 function Frog() {
     var me = this;
@@ -274,6 +256,8 @@ function Frog() {
         me.y = canvasHeight - rowHeight;
 
         me.isDead = false;
+
+        timerCanvas.reset();
     }
 
     this.update = function() {
@@ -786,7 +770,7 @@ function refreshGameArea() {
     myGameArea.key = false;
 
     myGameArea.clear();
-    // timerCanvas.update();
+    timerCanvas.update();
     
     for (var i = 0; i < rows.length; i += 1) {
         rows[i].update();
