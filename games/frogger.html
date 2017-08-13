@@ -27,7 +27,7 @@ var DOWN = 3;
 
 var NUM_LIVES = 3;
 
-var NUM_HOME_SPOTS = 5;
+var NUM_HOME_SPOTS = 4;
 
 var OBSTACLE_TYPES = {
     CAR: 0,
@@ -63,8 +63,6 @@ var rows = [];
 var homeFrogs = [];
 var lives;
 var timerCanvas;
-// var myObstacles = [];
-// var myScore;
 
 
 var rowHeight = canvasHeight / numRows;
@@ -73,6 +71,7 @@ var jumpSize = canvasHeight / numRows;
 function startGame() {
     frog = new Frog();
     lives = new Lives();
+    level = new Level();
     timerCanvas = new TimerCanvas();
     rows.push(new Row(0, ROW_TYPE.SAFE));
 
@@ -82,19 +81,19 @@ function startGame() {
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 2, type: ROW_TYPE.ROAD,   obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR2, 
-        direction: RIGHT, speed: 7, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 260  
+        direction: RIGHT, speed: 5, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 260  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 3, type: ROW_TYPE.ROAD,   obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR3, 
-        direction: LEFT, speed: 4, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 400  
+        direction: LEFT, speed: 3, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 400  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 4, type: ROW_TYPE.ROAD,   obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR4, 
-        direction: RIGHT, speed: 14, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 450  
+        direction: RIGHT, speed: 10, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 450  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 5, type: ROW_TYPE.ROAD,   obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
-        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 320  
+        direction: LEFT, speed: 1, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 320  
     })); 
     
     rows.push(new Row(6, ROW_TYPE.SAFE));
@@ -105,11 +104,11 @@ function startGame() {
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 8, type: ROW_TYPE.RIVER,   obstType: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.SHORT, 
-        direction: RIGHT, speed: 8, numGroups: 2, obstaclesPerGroup: 2, spaceBetweenObstacles: 40, spaceBetweenGroups: 30  
+        direction: RIGHT, speed: 5, numGroups: 2, obstaclesPerGroup: 2, spaceBetweenObstacles: 40, spaceBetweenGroups: 30  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 9, type: ROW_TYPE.RIVER,   obstType: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.LONG, 
-        direction: LEFT, speed: 4, numGroups: 1, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
+        direction: LEFT, speed: 3, numGroups: 1, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 30  
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 10, type: ROW_TYPE.RIVER,   obstType: OBSTACLE_TYPES.PAD,  extraArg: undefined,  
@@ -117,7 +116,7 @@ function startGame() {
     })); 
     rows.push(new ObstacleRow( {
         rowIndex: 11, type: ROW_TYPE.RIVER,   obstType: OBSTACLE_TYPES.LOG,  extraArg: LOG_WIDTH.MEDIUM, 
-        direction: LEFT, speed: 5, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: canvasWidth/2  
+        direction: LEFT, speed: 4, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: canvasWidth/2  
     })); 
     
     rows.push(new HomeRow(12, ROW_TYPE.HOME));
@@ -129,8 +128,6 @@ function startGame() {
 var myGameArea = {
     gameCanvas : document.createElement("canvas"),
     timerCanvas : document.createElement("canvas"),
-
-    level: 1,
 
     start : function() {
         this.gameCanvas.id = 'gameCanvas'
@@ -180,11 +177,6 @@ var myGameArea = {
         this.context.strokeText(text, x, y);
         this.context.fillStyle = 'green';
         this.context.fillText(text, x, y);
-    },
-
-    newLevel: function(){
-        this.level += 1;
-        homeFrogs = [];
     }
 }
 
@@ -235,7 +227,7 @@ function TimerCanvas(){
     };
 
     this.decrementTime = function(){
-        this.timerLength -= 0.5*myGameArea.level;
+        this.timerLength -= 0.5* level.getLevel();
 
         if(this.timerLength === 0){
             frog.frogDies();
@@ -243,6 +235,9 @@ function TimerCanvas(){
     };
 }
 
+/////////////////////////////
+// FROG
+/////////////////////////////
 function Frog() {
     var me = this;
     this.width = rowHeight;
@@ -295,9 +290,9 @@ function Frog() {
                 flowDirection = currentRow.getDirection();
 
                 if(flowDirection === LEFT){
-                    this.moveX(-flowSpeed*myGameArea.level);                   
+                    this.moveX(-flowSpeed * (level.getLevel()/2 + 0.5));                   
                 } else {
-                    this.moveX(flowSpeed*myGameArea.level);                    
+                    this.moveX(flowSpeed * (level.getLevel()/2 + 0.5));                    
                 }
             } else {
                 //Landed in the water!
@@ -327,7 +322,9 @@ function Frog() {
         this.reset();
 
         if(homeFrogs.length === NUM_HOME_SPOTS){
-            myGameArea.newLevel();
+            level.newLevel();
+            homeFrogs = [];
+
         }
     }
 
@@ -381,6 +378,9 @@ function Frog() {
     }
 }
 
+//////////////////////
+// HOME FROG
+//////////////////////
 function HomeFrog(x, y, width, height){
     this.x = x;
     this.y = y;
@@ -453,12 +453,17 @@ Row.prototype.getType = function(){
     return this.rowType;
 }
 
+/////////////////////
+// Home Row
+/////////////////////
 function HomeRow(rowIndex, type){
 
     Row.call(this, rowIndex, type);
 
     this.numHomeSpots = NUM_HOME_SPOTS;
-    this.wallWidth = canvasWidth/this.numHomeSpots/2;
+    //this.wallWidth = canvasWidth/this.numHomeSpots/2;
+    this.wallWidth = canvasWidth/((this.numHomeSpots*2) + 1);
+
 
     this.update = function() {
         ctx = myGameArea.context;
@@ -466,7 +471,7 @@ function HomeRow(rowIndex, type){
         Row.prototype.update.call(this);
 
         var wallX = 0;
-        for(var i = 0; i < this.numHomeSpots; ++i){
+        for(var i = 0; i < this.numHomeSpots + 1; ++i){
             ctx.fillStyle = '#599213';
 
             ctx.fillRect(wallX, this.y, this.wallWidth, rowHeight);
@@ -475,6 +480,10 @@ function HomeRow(rowIndex, type){
     }
 }
 HomeRow.prototype = Object.create(Row.prototype);
+
+/////////////////////
+// OBSTACLE ROW
+/////////////////////
 
 /**
 param:  config -  {
@@ -546,6 +555,9 @@ function createObstacle(type, x, rowY, direction, speed, extraArg){
     }
 }
 
+/////////////////////
+// CAR
+/////////////////////
 
 /**
     param:  x - the x position of the car
@@ -617,7 +629,9 @@ function Car(x, rowY, direction, speed, type){
 }
 Car.prototype = Object.create(Obstacle.prototype);
 
-
+/////////////////////
+// PAD
+/////////////////////
 
 function Pad(x, rowY, direction, speed){
 
@@ -649,7 +663,9 @@ function Pad(x, rowY, direction, speed){
 Pad.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
 
 
-
+/////////////////////
+// LOG
+/////////////////////
 function Log(x, rowY, direction, speed, logWidth){
 
     Obstacle.call(this, x, rowY, direction, speed );
@@ -665,7 +681,7 @@ function Log(x, rowY, direction, speed, logWidth){
 
         //Make two linear gradients, both starting from the middle of the log
         var centerY = this.rowY+(rowHeight/2);
-
+        debugger;
         var gradient = ctx.createLinearGradient(this.x, centerY,this.x, this.rowY);
         var centerX = this.x + this.width/2;
 
@@ -681,7 +697,9 @@ function Log(x, rowY, direction, speed, logWidth){
 Log.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
 
 
-
+/////////////////////
+// OBSTACLE ROW
+/////////////////////
 function Obstacle(x, rowY, direction, speed){
 
     this.x = x;
@@ -700,12 +718,12 @@ Obstacle.prototype.update = function(){
     //Update x position, consider wrapping
     var originalX = this.x;
     if(this.direction === LEFT){
-        this.x -= this.speed*myGameArea.level;
+        this.x -= this.speed * (level.getLevel()/2 + 0.5);
         if(this.x < -this.width){
             this.x = canvasWidth + this.width; //give a wrap buffer
         }
     } else {
-        this.x += this.speed*myGameArea.level;
+        this.x += this.speed * (level.getLevel()/2 + 0.5);
         if(this.x > canvasWidth + this.width ){
             this.x = -this.width;
         }
@@ -732,10 +750,6 @@ function intersects(x1, y1, w1, h1, x2, y2, w2, h2){
     var horizontalIntersection = (bottom < top2 && bottom > bottom2) || (top > bottom2 && top < top2);
     var verticalIntersection = (right > left2 && right < right2) || (left > left2 && left < right2);
 
-    // console.log("H Inte: left/right/top/bottom /2 = ", left, right, top, bottom, left2, right2, top2, bottom2);
-    // console.log("H intersect = ", horizontalIntersection);
-    // console.log("V intersect = ", verticalIntersection);
-
     return horizontalIntersection || verticalIntersection;
 
 }
@@ -756,7 +770,6 @@ function getRowY(rowIndex){
 
 function getRowIndex(y){
 
-    // console.log("y = ", y, ", rowHight = ", rowHeight, ", index = ", Math.floor(y/rowHeight));
     return Math.floor(y/rowHeight);
 }
 
@@ -817,12 +830,38 @@ function Lives(){
     this.updateLivesLabel();
 }
 
+function Level(){
+    this.level = 1;
+    
+    this.getLevel = function(){
+        return this.level;
+    }
 
+    this.reset = function(){
+        this.level = 1;
+        this.updateLevelLabel();
+    };
+
+    this.updateLevelLabel = function(){
+        document.getElementById("level").innerHTML = this.level;
+    }
+
+    this.newLevel = function(){
+        this.level += 1;
+        this.updateLevelLabel();
+
+    }
+
+    this.reset();
+
+}
 
 </script>
 
 <div style="text-align:left;width:880px;">
   Lives: <span id="livesLeft"></span><br><br>
+  Level: <span id="level"></span><br><br>
+
   <button onclick="resetGame()" >Reset</button><br><br>
 </div>
 
