@@ -1,0 +1,53 @@
+html, body {
+    margin: 0;
+    height: 100%;
+}
+
+line {
+    stroke: red;
+}
+
+g.group0 path,
+g.group0 circle {
+    stroke: red;
+    fill: none;
+}
+
+/*Find a "line" within a group element with class=tick */
+g.tick line{
+    stroke: blue;
+}
+
+/* Make axis labels custom*/
+g.tick text{
+    font-size: 12px;
+    fill: purple;
+}
+
+
+g.hidden line,
+g.hidden path{
+    display: none;
+}
+
+path{
+    stroke: green;
+    stroke-width: 2px;
+    fill: none;
+}
+
+/*  These are for the select.js example */
+rect {
+    fill: lightblue;
+    stroke: cornflowerblue;
+}
+
+circle{
+    fill: indianred;
+}
+
+text {
+    font-family: arial;
+    fill: white;
+    font-size: 11px;
+}
