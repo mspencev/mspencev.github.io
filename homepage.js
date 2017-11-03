@@ -9,17 +9,17 @@ var main = function() {
 $(document).ready(main);
 **/
 
-//svg = d3.select("body").append("svg").attr("height", "250px").attr("width", "250px")
+svg = d3.select("body").append("svg").attr("height", "250px").attr("width", "250px")
 
-// svg.append("circle")
-// .attr("class", "logo")
-// .attr("cx", 125)
-// .attr("cy", 125)
-// .attr("r", 20)
-// //.style("fill", "transparent")       // this code works OK
-// .style("stroke", "black")     // displays small black dot
-// .style("stroke-width", 0.25)
-// .style("fill", "url(#image)")
+svg.append("circle")
+.attr("class", "logo")
+.attr("cx", 125)
+.attr("cy", 125)
+.attr("r", 20)
+//.style("fill", "transparent")       // this code works OK
+.style("stroke", "black")     // displays small black dot
+.style("stroke-width", 0.25)
+.style("fill", "url(#image)")
 /**
 .on("mouseover", function(){ // when I use .style("fill", "red") here, it works 
     d3.select(this)
@@ -32,6 +32,13 @@ $(document).ready(main);
 // */
 //
 //document.getElementById("svg").onload = function() {myFunction()};
+
+
+
+
+
+
+
 
 
 //function myFunction() {
@@ -98,34 +105,34 @@ var circleData = [
 
 
 
-var svg = d3.select("body").append("svg")
-                                     .attr("width",200)
-                                     .attr("height",200);
+// var svg = d3.select("body").append("svg")
+//                                      .attr("width",200)
+//                                      .attr("height",200);
 
-var circleGroup = svg.append("g");
+// var circleGroup = svg.append("g");
 
-//Circles added to the circleGroup
-var circles = circleGroup.selectAll("circle")
-                          .data(circleData)
-                          .enter()
-                          .append("circle");
+// //Circles added to the circleGroup
+// var circles = circleGroup.selectAll("circle")
+//                           .data(circleData)
+//                           .enter()
+//                           .append("circle");
 
-var circleAttributes = circles
-                       .attr("cx", function (d) { 
-                               var radians = d.angle * Math.PI / 180;
-                               return (originX + (space * Math.cos(radians))); })
-                       .attr("cy", function (d) { 
-                               var radians = d.angle * Math.PI / 180;
-                               return (originY - (space * Math.sin(radians))); })
-                       .attr("r", function (d) { return d.radius; })
-                //        .style("fill", function (d) { return d.color; });
-                //        .attr("fill", "url(#image)")
-                       .attr("fill", function(d, i){
-                               var url = "\"url(#image" + i + ")\"";
-                               console.log("MSVICK: url = " + url);
-                               return url;
-                        })
-                       .attr("stroke", "black");
+// var circleAttributes = circles
+//                        .attr("cx", function (d) { 
+//                                var radians = d.angle * Math.PI / 180;
+//                                return (originX + (space * Math.cos(radians))); })
+//                        .attr("cy", function (d) { 
+//                                var radians = d.angle * Math.PI / 180;
+//                                return (originY - (space * Math.sin(radians))); })
+//                        .attr("r", function (d) { return d.radius; })
+//                 //        .style("fill", function (d) { return d.color; });
+//                 //        .attr("fill", "url(#image)")
+//                        .attr("fill", function(d, i){
+//                                var url = "\"url(#image" + i + ")\"";
+//                                console.log("MSVICK: url = " + url);
+//                                return url;
+//                         })
+//                        .attr("stroke", "black");
 
 
 // var circleGroup = circleGroup.attr("transform", "translate(20,0)");
