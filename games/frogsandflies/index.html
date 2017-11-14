@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+/* canvas {
+    border:20px solid #59921E;
+    background-color: #f1f1f1;
+} */
+
+body {
+    background-color: #70A2EE;
+}
+
+</style>
+</head>
+<body onload="startGame()">
+<script>
+
+var canvasWidth = 800;
+var canvasHeight = 500;
+
+
+var ROW_TYPE = {
+    SAFE: 0,
+    ROAD: 1,
+    RIVER: 2,
+    HOME: 3
+}
+
+var LOG_WIDTH = {
+    SHORT: 40,
+    MEDIUM: 160,
+    LONG: 250,
+}
+
+
+var frog1, frog2;
+var rows = [];
+var homeFrogs = [];
+// var timerCanvas;
+
+
+var rowHeight = canvasHeight / numRows;
+var jumpSize = canvasHeight / numRows;
+
+function startGame() {
+    frog1 = new Frog();
+    frog2 = new Frog();
+    level = new Level();
+    // timerCanvas = new TimerCanvas();
+
+    myGameArea.start();
+}
+
+var myGameArea = {
+    gameCanvas : document.createElement("canvas"),
+    // timerCanvas : document.createElement("canvas"),
+
+    start : function() {
+        this.gameCanvas.id = 'gameCanvas'
+        this.gameCanvas.width = canvasWidth;
+        this.gameCanvas.height = canvasHeight;
+        this.context = this.gameCanvas.getContext("2d");
+        this.gameCanvas.style.border = '20px solid #59921E';
+        this.gameCanvas.style.backgroundcolor =  '#f1f1f1';
+
+        document.body.insertBefore(this.gameCanvas, document.body.childNodes[0]);
+
+        resetGame();
+        this.interval = setInterval(refreshGameArea, 50);
+        window.addEventListener('keydown', function (e) {
+            myGameArea.key = e.keyCode;
+        })
+        window.addEventListener('keyup', function (e) {
+            myGameArea.key = false;
+        })    
+    },
+    clear : function() {
+        this.context.clearRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
+
+        // var ctx = this.timerCanvas.getContext('2d');
+
+    },
+    isGameOver: false,
+
+    gameOver: function(){
+        this.isGameOver = true;
+        this.showGameOverText();
+    },
+
+    reset: function(){
+        this.isGameOver = false;
+    },
+
+    showGameOverText: function(){
+
+        var text = 'Game Over';
+        var x = canvasWidth/2;
+        var y = canvasHeight/2;
+        this.context.font = "small-caps bolder 110px Sans-serif"
+        this.context.strokeStyle = 'black';
+        this.context.lineWidth = 10;
+        this.context.textAlign = "center";
+        this.context.strokeText(text, x, y);
+        this.context.fillStyle = 'green';
+        this.context.fillText(text, x, y);
+    }
+}
+
+
+
+/////////////////////////////
+// FROG
+/////////////////////////////
+function Frog() {
+    var me = this;
+    this.width = rowHeight;
+    this.height = rowHeight;
+    this.image = new Image();
+    
+
+    this.reset = function(){
+
+        me.image.src = "frog.png";
+        me.x = (canvasWidth / 2) - (rowHeight / 2);
+        me.y = canvasHeight - rowHeight;
+
+        me.isDead = false;
+
+        // timerCanvas.reset();
+    }
+
+    this.update = function() {
+        ctx = myGameArea.context;
+
+
+        ctx.drawImage(this.image, 
+        this.x, 
+        this.y,
+        this.width, this.height);
+    }
+
+    this.obstacleCheck = function() {
+
+        if(this.isDead){
+            return;
+        }
+
+        var currentRow = getRow(this.y);
+
+        if(currentRow.getType() === ROW_TYPE.HOME){
+            this.frogGetsHome();
+            return;
+            
+        }
+
+        var flowSpeed = 0;
+        var flowDirection = LEFT;
+        var intersects = currentRow.intersectsWithObstacle(this.x, this.y, this.width, this.height)
+        if(currentRow.getType() === ROW_TYPE.RIVER){
+            if(intersects){
+                //Make the frog ride the pad or log
+                flowSpeed = currentRow.getSpeed();
+                flowDirection = currentRow.getDirection();
+
+                if(flowDirection === LEFT){
+                    this.moveX(-flowSpeed * (level.getLevel()/2 + 0.5));                   
+                } else {
+                    this.moveX(flowSpeed * (level.getLevel()/2 + 0.5));                    
+                }
+            } else {
+                //Landed in the water!
+                this.frogDies();
+            }
+        }
+        if(currentRow.getType() === ROW_TYPE.ROAD){
+            if(intersects){
+                //Hit by a car!
+                this.frogDies();
+            }
+        } 
+    
+    }
+
+    this.frogDies = function(){
+        this.image.src = 'deadFrog.png';
+        this.isDead = true;
+        setTimeout(this.reset, 2200);
+        lives.decrement();
+
+    }
+
+    this.frogGetsHome = function(){
+        homeFrogs.push(new HomeFrog(this.x, this.y, this.width, this.height));
+        this.isDead = true;
+        this.reset();
+
+        if(homeFrogs.length === NUM_HOME_SPOTS){
+            level.newLevel();
+            homeFrogs = [];
+
+        }
+    }
+
+    this.moveX = function(increment){
+        var direction = (increment > 0 ? RIGHT : LEFT);
+
+        console.log("moveX(", increment, "), direction = ", direction);
+        if(!this.isLegalMove(direction)){
+            return; //don't do anything if it's an illegal move
+        }
+
+        if(this.hitsTheSideBorder(direction)){
+            this.frogDies();
+        }
+        else{
+            this.x += increment;
+        }
+    }
+
+    this.moveY = function(increment){
+        var direction = (increment > 0 ? DOWN : UP);
+        if(!this.isLegalMove(direction)){
+            return;
+        }
+        this.y += increment;
+    }
+
+    this.isLegalMove = function(direction){
+        if(this.isDead){
+            return false; //can't move if you're dead
+        }
+
+        if((direction === DOWN && this.y === (canvasHeight - rowHeight)) || 
+          (direction === UP && this.y === 0)){
+            //Can't move up or down if you're at the top or bottom.
+            return false;
+        }
+        return true;
+    }
+
+    this.hitsTheSideBorder = function(direction){
+        
+        var gap = (canvasWidth-this.width) - this.x;
+
+        if((direction === LEFT && this.x < 0) || 
+           (direction === RIGHT && 
+                gap < this.width/2)){
+            return true;
+        }
+        return false;
+    }
+}
+
+//////////////////////
+// HOME FROG
+//////////////////////
+function HomeFrog(x, y, width, height){
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.image = new Image();
+    this.image.src = "homeFrog.png";
+
+    this.update = function(){
+        ctx = myGameArea.context;
+
+
+        ctx.drawImage(this.image, 
+        this.x, 
+        this.y,
+        this.width, this.height);
+    }
+
+}
+
+
+function Row(rowIndex, type){
+
+    this.rowType = type;
+    this.rowIndex = rowIndex;
+    this.x = 0;
+    this.y = getRowY(rowIndex);
+
+    
+}
+
+Row.prototype.containsY = function(y){
+    return y >= this.y && y <= (this.y + rowHeight);
+}
+
+Row.prototype.getRowColor = function(){
+    switch(this.rowIndex){
+        case 0:
+        case 6:
+            return "#FEFF41";
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+            return "#000000";
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+            return "#0B009B"; 
+    }
+}
+
+Row.prototype.update = function(){
+    ctx = myGameArea.context;
+
+    ctx.fillStyle = this.getRowColor();
+
+    ctx.fillRect(this.x, this.y, canvasWidth, rowHeight);
+}
+
+Row.prototype.intersectsWithObstacle = function(x, y, width, height){
+    return false;
+}
+
+Row.prototype.getType = function(){
+    return this.rowType;
+}
+
+/////////////////////
+// Home Row
+/////////////////////
+function HomeRow(rowIndex, type){
+
+    Row.call(this, rowIndex, type);
+
+    this.numHomeSpots = NUM_HOME_SPOTS;
+    //this.wallWidth = canvasWidth/this.numHomeSpots/2;
+    this.wallWidth = canvasWidth/((this.numHomeSpots*2) + 1);
+
+
+    this.update = function() {
+        ctx = myGameArea.context;
+
+        Row.prototype.update.call(this);
+
+        var wallX = 0;
+        for(var i = 0; i < this.numHomeSpots + 1; ++i){
+            ctx.fillStyle = '#599213';
+
+            ctx.fillRect(wallX, this.y, this.wallWidth, rowHeight);
+            wallX +=2*this.wallWidth;
+        }
+    }
+}
+HomeRow.prototype = Object.create(Row.prototype);
+
+/////////////////////
+// OBSTACLE ROW
+/////////////////////
+
+/**
+param:  config -  {
+        rowIndex: 5, type: ROW_TYPE.RIVER, obstType: OBSTACLE_TYPES.CAR,  extraArg: CAR_TYPES.CAR5, 
+        direction: LEFT, speed: 2, numGroups: 2, obstaclesPerGroup: 1, spaceBetweenObstacles: 20, spaceBetweenGroups: 80  
+    }
+*/
+function ObstacleRow(config){
+
+    Row.call(this, config.rowIndex, config.type);
+
+    this.obstacleType = config.obstType;
+    this.direction = config.direction;
+    this.speed = config.speed;
+    this.obstacles = [];
+    
+    this.initX = 0;
+    let x = this.initX;
+    for(var g = 0; g < config.numGroups; ++g){
+        for(var o = 0; o < config.obstaclesPerGroup; ++o){
+            this.obstacles.push(createObstacle(this.obstacleType, x, getRowY(config.rowIndex), this.direction, this.speed, config.extraArg));
+            x += config.spaceBetweenObstacles;
+        }
+        x += config.spaceBetweenGroups;
+    }
+   
+    this.update = function() {
+        ctx = myGameArea.context;
+
+        Row.prototype.update.call(this);
+
+        for(var i = 0; i < this.obstacles.length; ++i){
+            this.obstacles[i].update();
+        }
+    }
+
+    this.intersectsWithObstacle = function(x, y, width, height){
+        for(var i = 0; i < this.obstacles.length; ++i){
+            if(this.obstacles[i].intersects(x, y, width, height)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    this.getSpeed = function(){
+        return this.speed;
+    }
+    this.getDirection = function(){
+        return this.direction;
+    }
+
+}
+ObstacleRow.prototype = Object.create(Row.prototype);
+
+
+
+function createObstacle(type, x, rowY, direction, speed, extraArg){
+    switch(type){
+        case OBSTACLE_TYPES.CAR: 
+            return new Car(x, rowY, direction, speed, extraArg);
+            break;
+        case OBSTACLE_TYPES.PAD:
+            return new Pad(x, rowY, direction, speed);
+            break;
+        case OBSTACLE_TYPES.LOG:
+            return new Log(x, rowY, direction, speed, extraArg);
+            break;
+    }
+}
+
+/////////////////////
+// CAR
+/////////////////////
+
+/**
+    param:  x - the x position of the car
+    param:  y - the y position of the row's y
+*/
+function Car(x, rowY, direction, speed, type){
+
+    Obstacle.call(this, x, rowY, direction, speed );
+    this.type = type;
+
+    this.image = new Image();
+
+    this.update = function(){
+
+        Obstacle.prototype.update.call(this);
+
+        let ctx = myGameArea.context;
+        switch(this.type){
+            case CAR_TYPES.CAR1:
+                this.image.src = "car1.png";
+                this.width = 60;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
+                break;
+            case CAR_TYPES.CAR2:
+                this.image.src = "car2.png";
+                this.width = 70;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
+                break;
+            case CAR_TYPES.CAR3:
+                this.image.src = "car5.png";
+                this.width = 80;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
+                break;
+            case CAR_TYPES.CAR4:
+                this.image.src = "car3.png";
+                this.width = 60;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
+                break;
+                break;
+            case CAR_TYPES.CAR5:
+                this.image.src = "truck2.png";
+                this.width = 150;
+                this.height = rowHeight;
+                ctx.drawImage(this.image, 
+                    this.x,
+                    this.rowY,
+                    this.width, this.height);
+                break;
+                break;
+        }
+    }
+
+}
+Car.prototype = Object.create(Obstacle.prototype);
+
+/////////////////////
+// PAD
+/////////////////////
+
+function Pad(x, rowY, direction, speed){
+
+    Obstacle.call(this, x, rowY, direction, speed );
+
+    this.width = rowHeight+(rowHeight*0.3);
+
+    this.centerY = this.rowY + (rowHeight/2); //this will remain constant
+
+    this.update = function(){
+
+        Obstacle.prototype.update.call(this);
+
+        let ctx = myGameArea.context;
+
+        centerX = this.x + (this.width/2);
+
+
+        ctx.fillStyle = "#A94D03";
+        ctx.strokeStyle = "#440D03";
+        ctx.beginPath();
+        ctx.lineWidth = 5;
+        ctx.ellipse(centerX, this.centerY, this.width/2, (rowHeight/2 - 2), 0, 0, 2 * Math.PI); //center x, center y, radiusX, radiusY, rotation, startAngle, endAngle);
+        ctx.fill();
+        ctx.stroke();
+    }
+      
+}
+Pad.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
+
+
+/////////////////////
+// LOG
+/////////////////////
+function Log(x, rowY, direction, speed, logWidth){
+
+    Obstacle.call(this, x, rowY, direction, speed );
+
+    this.width = logWidth;
+    
+
+    this.update = function(){
+
+        Obstacle.prototype.update.call(this);
+
+        let ctx = myGameArea.context;
+
+        //Make two linear gradients, both starting from the middle of the log
+        var centerY = this.rowY+(rowHeight/2);
+        debugger;
+        var gradient = ctx.createLinearGradient(this.x, centerY,this.x, this.rowY);
+        var centerX = this.x + this.width/2;
+
+        gradient.addColorStop(0,"#797800");
+        gradient.addColorStop(1,"#D9D860");
+        ctx.fillStyle = gradient;
+
+        ctx.fillRect(this.x, this.rowY+2, this.width, rowHeight - 4);
+
+    }
+      
+}
+Log.prototype = Object.create(Obstacle.prototype); // or = new Obstacle
+
+
+/////////////////////
+// OBSTACLE ROW
+/////////////////////
+function Obstacle(x, rowY, direction, speed){
+
+    this.x = x;
+    this.rowY = rowY;
+    this.width = 10;
+    this.height = 10;
+    this.direction = direction;
+    this.speed = speed;
+    
+}
+Obstacle.prototype.getX = function(){
+    return this.x;
+}
+
+Obstacle.prototype.update = function(){
+    //Update x position, consider wrapping
+    var originalX = this.x;
+    if(this.direction === LEFT){
+        this.x -= this.speed * (level.getLevel()/2 + 0.5);
+        if(this.x < -this.width){
+            this.x = canvasWidth + this.width; //give a wrap buffer
+        }
+    } else {
+        this.x += this.speed * (level.getLevel()/2 + 0.5);
+        if(this.x > canvasWidth + this.width ){
+            this.x = -this.width;
+        }
+    }
+}
+
+Obstacle.prototype.intersects = function(x, y, width, height){
+    return intersects(x, y, width, height, this.x, this.rowY, this.width, this.height);
+}
+
+function intersects(x1, y1, w1, h1, x2, y2, w2, h2){
+    
+    var buffer = 10;
+
+    var left = x1 + buffer;
+    var right = x1+w1 - buffer;
+    var top = y1 + buffer;
+    var bottom = y1+h1 - buffer;
+    var left2 = x2 + buffer;
+    var right2 = x2+w2 - buffer;
+    var top2 = y2 + buffer;
+    var bottom2 = y2+h2 - buffer;
+    
+    var horizontalIntersection = (bottom < top2 && bottom > bottom2) || (top > bottom2 && top < top2);
+    var verticalIntersection = (right > left2 && right < right2) || (left > left2 && left < right2);
+
+    return horizontalIntersection || verticalIntersection;
+
+}
+
+function getRow(y){
+    for(var i = 0; i < rows.length; ++i){
+        if(rows[i].containsY(y)){
+            return rows[i];
+        }
+    }
+    console.error("Failed to find row for y: " + y);
+    return null;
+}
+
+function getRowY(rowIndex){
+    return canvasHeight - (rowHeight * (rowIndex+1));
+}
+
+function getRowIndex(y){
+
+    return Math.floor(y/rowHeight);
+}
+
+function refreshGameArea() {
+
+    if(myGameArea.isGameOver){
+        return;
+    }
+
+    if (myGameArea.key && myGameArea.key == 37) {frog.moveX(-jumpSize);}
+    if (myGameArea.key && myGameArea.key == 39) {frog.moveX(jumpSize);}
+    if (myGameArea.key && myGameArea.key == 38) {frog.moveY(-jumpSize);}
+    if (myGameArea.key && myGameArea.key == 40) {frog.moveY(jumpSize);}
+
+    //The refresh will happen multiple times before the key-up listener is fired, so we'll prevent multiple hops in one key click.
+    myGameArea.key = false;
+
+    myGameArea.clear();
+    // timerCanvas.update();
+    
+    for (var i = 0; i < rows.length; i += 1) {
+        rows[i].update();
+    }
+
+    for(var h = 0; h < homeFrogs.length; h += 1){
+        homeFrogs[h].update();
+    }
+
+    frog.obstacleCheck();
+    frog.update();
+
+}
+
+function resetGame(){
+    frog.reset();
+    lives.reset();
+    myGameArea.reset();
+}
+
+function Lives(){
+    this.numLives = NUM_LIVES;
+    this.reset = function(){
+        this.numLives = NUM_LIVES;
+        this.updateLivesLabel();
+    }
+    this.decrement = function(){
+        this.numLives -= 1;
+        this.updateLivesLabel();
+        if(this.numLives === 0){
+            myGameArea.gameOver();
+        }
+    }
+
+    this.updateLivesLabel = function(){
+        document.getElementById("livesLeft").innerHTML = this.numLives;
+    }
+
+    this.updateLivesLabel();
+}
+
+function Level(){
+    this.level = 1;
+    
+    this.getLevel = function(){
+        return this.level;
+    }
+
+    this.reset = function(){
+        this.level = 1;
+        this.updateLevelLabel();
+    };
+
+    this.updateLevelLabel = function(){
+        document.getElementById("level").innerHTML = this.level;
+    }
+
+    this.newLevel = function(){
+        this.level += 1;
+        this.updateLevelLabel();
+
+    }
+
+    this.reset();
+
+}
+
+</script>
+
+<div style="text-align:left;width:880px;">
+  Lives: <span id="livesLeft"></span><br><br>
+  Level: <span id="level"></span><br><br>
+
+  <button onclick="resetGame()" >Reset</button><br><br>
+</div>
+
+</body>
+</html>

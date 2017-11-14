@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<style>
+* {
+   margin: 0;
+   padding: 0;
+ }
+
+ .wrapper {
+   width: 850px;
+   margin: 20px auto;
+}
+</style>
+</head>
+<body onload="go()">
+<script>
+
+    //Frog action states:
+    var JUMPING_LEFT=0;
+    var JUMPING_RIGHT=1;
+    var SITTING_FACING_LEFT=2;
+    var SITTING_FACING_RIGHT=3;
+
+    //Animate offsets into our images
+    var JUMP_RIGHT_OFFSET=0;
+    var JUMP_LEFT_OFFSET=38;
+    var SIT_FACING_LEFT_OFFSET=76;
+    var SIT_FACING_RIGHT_OFFSET=120;
+
+    var tonguePos = {};  //where to start drawing the tongue relative to the frog.x, frog.y
+    tonguePos[JUMPING_LEFT] = [7, 10];
+    tonguePos[JUMPING_RIGHT] = [37, 10];
+    tonguePos[SITTING_FACING_LEFT] = [7, 22];
+    tonguePos[SITTING_FACING_RIGHT] = [37, 22];
+
+
+    //Tongue has the following phases when it stick out:  
+    //  in, half out, all out, half out, in
+    //These vars indicate when those transisions take place.  The numbers are frame counts.
+    var tongue1Thresh = 5;
+    var tongue2Thresh = 25;
+    var tongue3Thresh = 30;
+
+    var tongueColor = '#6699EE';
+
+    var flyMaxY = 220;
+    var flyMinY = 140;
+
+    /*
+        args:  3 points defining the start, middle, and end of a parabola 
+        return:  the a, b, and c variable of for the quadratic equation (so we can solve y = ax^2 + bx + c)
+    */
+    var computeParabolaConstants = function(x1, y1, x2, y2, x3, y3){
+        //Eqution for a parabola: 
+        //y = ax^2 + bx + c
+
+        // You can use Lagrange polynomial interpolation, the curve is given by
+        //y(x) = y1 * (x-x2)*(x-x3)/((x1-x2)*(x1-x3))
+        //    + y2 * (x-x1)*(x-x3)/((x2-x1)*(x2-x3))
+        //    + y3 * (x-x1)*(x-x2)/((x3-x1)*(x3-x2))
+
+        // If you collect the coefficients, you obtain
+        var a = y1/((x1-x2)*(x1-x3)) + y2/((x2-x1)*(x2-x3)) + y3/((x3-x1)*(x3-x2))
+
+        var b = -y1*(x2+x3)/((x1-x2)*(x1-x3))
+            -y2*(x1+x3)/((x2-x1)*(x2-x3))
+            -y3*(x1+x2)/((x3-x1)*(x3-x2))
+
+        var c = y1*x2*x3/((x1-x2)*(x1-x3))
+        + y2*x1*x3/((x2-x1)*(x2-x3))
+        + y3*x1*x2/((x3-x1)*(x3-x2))
+
+        return [a, b, c];
+    };
+
+
+var go = function(){
+
+    var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+    window.requestAnimationFrame = requestAnimationFrame;
+
+    canvasEl = document.createElement('canvas');
+    canvas = canvasEl.getContext('2d');
+    canvasEl.width = 640;
+    canvasEl.height = 387;
+    document.getElementsByClassName('wrapper')[0].appendChild(canvasEl);
+
+   
+
+    // Background
+    var background = {x: 0, y: 0, width: 640, height: 387};
+    var backgroundReady = false;
+    var backgroundImg = new Image();
+    backgroundImg.onload = function(){
+        backgroundReady = true;
+    };
+    backgroundImg.src = 'background.png';
+
+    // frog
+    var frog = {x: 120, y: 300, width: 38, height: 38, spriteX: 0, spriteY: 0, speed: 150,
+                edgeRegion: 50, 
+                moving: false, animateTime: 2, 
+                startPos: [120, 300], //x, y, position on left lilypad
+                maxPos: [270, 140],   // Peek of jump
+                endPos: [400, 300],   // on right lillypad
+                actionState: SITTING_FACING_RIGHT,
+                tongueOut: false,
+                toungeAnimationCount: 0};
+
+    var flies = [];
+    flies[0] = {x: 0, y: flyMinY-flyMaxY, 
+        width: 8, height: 8,    
+        speed: 2, 
+        visible: true, 
+        goingLeft: false,
+        startDelayCnt: 0,
+        yVariation: 1,
+        adjustingY: 0}; //-1, 0, 1 //adjusting up, down, not at all.
+    flies[1] = {x: canvasEl.width, y: flyMinY-flyMaxY, width: 8, height: 8, speed: 2, visible: true, goingLeft: true};
+
+
+    //Defining points for this frog's parabolic jump
+    var frog1ABC = computeParabolaConstants(frog.startPos[0], frog.startPos[1], frog.maxPos[0], frog.maxPos[1], frog.endPos[0], frog.endPos[1]);
+
+    var frogReady = false;
+    var frogReady = false;
+    var frogImg = new Image();
+    frogImg.onload = function(){
+        frogReady = true;
+    };
+    frogImg.src = 'frog1.png';
+
+    // Keyboard controls
+    var keysDown = {};
+    addEventListener('keydown', function (e) {
+        frog.moving = true;
+        keysDown[e.keyCode] = true;
+    }, false);
+
+    addEventListener('keyup', function (e) {  
+        frog.moving = false;
+        delete keysDown[e.keyCode];
+    }, false);
+
+    var resetFly = function(fly){
+        // flies[0] = {x: 0, y: flyMinY-flyMaxY, 
+            // width: 8, height: 8,    
+            // speed: 2, 
+            // visible: true, 
+            // goingLeft: false,
+            // startDelayCnt: 0,
+            // yVariation: 1};
+        fly.y =  Math.floor(Math.random()*(flyMaxY-flyMinY+1)+flyMinY);
+        fly.goingLeft = Math.floor(Math.random()*2) === 1 ? true : false;
+        fly.x = 0;
+        if(fly.goingLeft){fly.x = canvasEl.width;}
+        fly.startDelayCnt = 0;
+        fly.yVariation = Math.floor(Math.random()*(5-1+1)+1);
+        fly.visible = true;
+        fly.speed = Math.floor(Math.random()*3)
+
+    };
+
+    // Update
+    var update = function(modifier){
+
+        //32 = spacebar
+        //37 = left arrow
+        //39 = right arrow
+        //13 = return
+
+        //Detect action state change
+        if(32 in keysDown){
+            if(frog.actionState === SITTING_FACING_RIGHT) frog.actionState = JUMPING_RIGHT;
+            if(frog.actionState === SITTING_FACING_LEFT) frog.actionState = JUMPING_LEFT;
+        }
+
+        //Update the frog position
+        var nextX = frog.x;
+        if(frog.actionState === JUMPING_RIGHT){
+            nextX = frog.x + frog.speed * modifier;
+
+            if(nextX <= frog.endPos[0]){
+                frog.x = nextX;
+                frog.y = (frog1ABC[0]*frog.x*frog.x) + (frog1ABC[1]*frog.x) + frog1ABC[2]; // y = ax^2 + bx + c
+            }
+            else{
+                frog.actionState = SITTING_FACING_LEFT;
+            }
+        } else if(frog.actionState === JUMPING_LEFT){
+            nextX = frog.x - frog.speed * modifier;
+            
+            if(nextX >= frog.startPos[0]){
+                frog.x = nextX;
+                frog.y = (frog1ABC[0]*frog.x*frog.x) + (frog1ABC[1]*frog.x) + frog1ABC[2]; // y = ax^2 + bx + c
+            }
+            else{
+                frog.actionState = SITTING_FACING_RIGHT;
+            }
+        }     
+
+
+        //update fly positions
+        flies.forEach(function(fly){
+
+            // var nextY = Math.floor(Math.random()*(flyMaxY-flyMinY+1)+flyMinY);
+
+            // flies[0] = {x: 0, y: flyMinY-flyMaxY, 
+            // width: 8, height: 8,    
+            // speed: 2, 
+            // visible: true, 
+            // goingLeft: false,
+            // startDelayCnt: 0,
+            // yVariation: 1};
+
+            if(!fly.visible){ 
+                fly.startDelayCnt++;
+                if(fly.startDelayCnt === 30){
+                    resetFly(fly);
+// console.log('reset fly!', fly);
+
+                }
+                return; 
+            }
+
+            if(fly.goingLeft){ nextX = fly.x - fly.speed; }
+            if(!fly.goingLeft){ nextX = fly.x + fly.speed; }
+
+            if(nextX < 0 || nextX > canvasEl.width){
+                //flied off the screen
+                fly.visible = false;
+            } 
+            else {
+                fly.x = nextX;
+            }
+
+            if(fly.adjustingY < 0 ){
+                fly.y -= 1;
+                fly.adjustingY++;
+            } 
+            else if(fly.adjustingY > 0){
+                fly.y += 1;
+                fly.adjustingY--;
+            }
+            else{
+                var yStep = Math.floor(Math.random()*3) //Go up (2), go down (1), stay (0)
+                var nextY = fly.y;
+                if(yStep === 1){ 
+                    nextY = fly.y -= 1; //fly.yVariation;
+                    fly.adjustingY = -4;
+                    if(nextY < flyMinY) { nextY = flyMinY;}
+                }
+                if(yStep === 2){ 
+                    nextY = fly.y += 1;//fly.yVariation;
+                    fly.adjustingY = 4;
+                    if(nextY > flyMaxY) { nextY = flyMaxY;}
+                }
+                else{
+                    fly.adjustingY = 0;
+                }
+                fly.y = nextY;
+            }
+
+        });   
+
+        if(13 in keysDown){
+            frog.tongueOut = true;
+        }
+
+    };
+
+
+
+    // Render Function
+    var render = function(){
+        canvas.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+        if(backgroundReady){
+            canvas.drawImage(backgroundImg, background.x, background.y);
+        }
+        
+        if(frogReady){
+            canvas.drawImage(frogImg, frog.spriteX, frog.spriteY, frog.width, frog.height, frog.x, frog.y, frog.width, frog.height);
+        }
+
+        //Figure out the sprite anamation positions
+        if(frog.actionState === SITTING_FACING_LEFT)  {frog.spriteX = SIT_FACING_LEFT_OFFSET;}
+        if(frog.actionState === SITTING_FACING_RIGHT) {frog.spriteX = SIT_FACING_RIGHT_OFFSET;}
+        if(frog.actionState === JUMPING_RIGHT)        {frog.spriteX = JUMP_RIGHT_OFFSET;}
+        if(frog.actionState === JUMPING_LEFT)         {frog.spriteX = JUMP_LEFT_OFFSET;}
+
+
+        //Draw fly
+        flies.forEach(function(fly){
+            if(!fly.visible){ return; }
+
+            canvas.fillStyle = '#FF0000';
+            canvas.fillRect(fly.x, fly.y, fly.width, fly.height);
+        });
+       
+    
+        
+        //Draw the tonge
+        if(frog.tongueOut){
+            var count = frog.toungeAnimationCount;
+
+            var tongueX = tonguePos[frog.actionState][0];
+            var tongueY = tonguePos[frog.actionState][1];
+            //Negate tongue width if it's facing left
+            var widthNegator = (frog.actionState === JUMPING_LEFT || frog.actionState === SITTING_FACING_LEFT) ? -1 : 1; 
+
+            if(count < tongue1Thresh || (count > tongue2Thresh && count < tongue3Thresh) ){
+                canvas.fillStyle = tongueColor;
+                canvas.fillRect(Math.round(frog.x)+tongueX, Math.round(frog.y)+tongueY, widthNegator*15, 5);
+            }
+            else if(count >= tongue3Thresh){
+                frog.tongueOut = false;
+                frog.toungeAnimationCount = 0;
+                canvas.clearRect(Math.round(frog.x)+tongueX, Math.round(frog.y)+tongueY, widthNegator*15, 5);
+            }
+            else{
+                canvas.fillStyle = tongueColor;
+                canvas.fillRect(Math.round(frog.x)+tongueX, Math.round(frog.y)+tongueY, widthNegator*30, 5);
+            }
+            
+            frog.toungeAnimationCount++;
+        }
+
+
+        
+
+        // canvas.fillStyle = "#FF0000";
+        // canvas.fillRect(140,320,10,10);
+        // canvas.fillStyle = "#FF4400";
+        // canvas.fillRect(270,150,10,10);
+        // canvas.fillStyle = "#FF4400";
+        // canvas.fillRect(400,320,10,10);
+
+        // for(var i = 140; i < 400; i+=20){
+        //     var y = (frog1ABC[0]*i*i) + frog1ABC[1]*i + frog1ABC[2];
+        //     canvas.fillStyle = "#FF0000";
+        //     canvas.fillRect(i,y,10,10);
+        // }
+    };
+
+    
+
+    var mainInterval = function(){
+        var now = Date.now();
+        var delta = now - then;
+
+        update(delta / 1000);
+        render();
+
+        then = now;
+        requestAnimationFrame(mainInterval);
+    };
+
+    render();
+    then = Date.now();
+    mainInterval();
+
+}
+
+
+</script>
+
+<div class="wrapper"></div>
+</body>
+</html>
