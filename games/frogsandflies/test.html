@@ -113,12 +113,17 @@ var go = function(){
     flies[0] = {x: 0, y: flyMinY-flyMaxY, 
         width: 8, height: 8,    
         speed: 2, 
-        visible: true, 
         goingLeft: false,
         startDelayCnt: 0,
         yVariation: 1,
         adjustingY: 0}; //-1, 0, 1 //adjusting up, down, not at all.
-    flies[1] = {x: canvasEl.width, y: flyMinY-flyMaxY, width: 8, height: 8, speed: 2, visible: true, goingLeft: true};
+    flies[1] = {x: canvasEl.width, y: flyMinY-flyMaxY, 
+        width: 8, height: 8, 
+        speed: 2, 
+        goingLeft: true,
+        startDelayCnt: 0,
+        yVariation: 1,
+        adjustingY: 0}; 
 
 
     //Defining points for this frog's parabolic jump
@@ -145,22 +150,19 @@ var go = function(){
     }, false);
 
     var resetFly = function(fly){
-        // flies[0] = {x: 0, y: flyMinY-flyMaxY, 
-            // width: 8, height: 8,    
-            // speed: 2, 
-            // visible: true, 
-            // goingLeft: false,
-            // startDelayCnt: 0,
-            // yVariation: 1};
+        
         fly.y =  Math.floor(Math.random()*(flyMaxY-flyMinY+1)+flyMinY);
-        fly.goingLeft = Math.floor(Math.random()*2) === 1 ? true : false;
-        fly.x = 0;
-        if(fly.goingLeft){fly.x = canvasEl.width;}
-        fly.startDelayCnt = 0;
+        if(fly.goingLeft){ 
+            fly.x = canvasEl.width + 10; //put him off screen
+        } 
+        else { 
+            fly.x = -10; 
+        }
+        fly.startDelayCnt = Math.floor(Math.random()*35);
         fly.yVariation = Math.floor(Math.random()*(5-1+1)+1);
-        fly.visible = true;
-        fly.speed = Math.floor(Math.random()*3)
-
+        fly.speed = Math.floor(Math.random()*3) + 1; //make sure it's not a zero speed
+    
+        fly.adjustingY = 0;
     };
 
     // Update
@@ -204,36 +206,24 @@ var go = function(){
 
         //update fly positions
         flies.forEach(function(fly){
-
-            // var nextY = Math.floor(Math.random()*(flyMaxY-flyMinY+1)+flyMinY);
-
-            // flies[0] = {x: 0, y: flyMinY-flyMaxY, 
-            // width: 8, height: 8,    
-            // speed: 2, 
-            // visible: true, 
-            // goingLeft: false,
-            // startDelayCnt: 0,
-            // yVariation: 1};
-
-            if(!fly.visible){ 
-                fly.startDelayCnt++;
-                if(fly.startDelayCnt === 30){
-                    resetFly(fly);
-// console.log('reset fly!', fly);
-
-                }
-                return; 
+            if(fly.startDelayCnt > 0){
+                fly.startDelayCnt -= fly.startDelayCnt;
+                return;
             }
 
-            if(fly.goingLeft){ nextX = fly.x - fly.speed; }
-            if(!fly.goingLeft){ nextX = fly.x + fly.speed; }
-
-            if(nextX < 0 || nextX > canvasEl.width){
-                //flied off the screen
-                fly.visible = false;
-            } 
-            else {
-                fly.x = nextX;
+            if(fly.goingLeft){ 
+                nextX = fly.x - fly.speed; 
+                if(nextX < 0){
+                    resetFly(fly);
+                } 
+                else {fly.x = nextX;}
+            }
+            if(!fly.goingLeft){ 
+                nextX = fly.x + fly.speed; 
+                if(nextX > canvasEl.width){
+                    resetFly(fly);
+                }
+                else {fly.x = nextX;}
             }
 
             if(fly.adjustingY < 0 ){
@@ -294,13 +284,9 @@ var go = function(){
 
         //Draw fly
         flies.forEach(function(fly){
-            if(!fly.visible){ return; }
-
             canvas.fillStyle = '#FF0000';
             canvas.fillRect(fly.x, fly.y, fly.width, fly.height);
         });
-       
-    
         
         //Draw the tonge
         if(frog.tongueOut){
@@ -311,19 +297,42 @@ var go = function(){
             //Negate tongue width if it's facing left
             var widthNegator = (frog.actionState === JUMPING_LEFT || frog.actionState === SITTING_FACING_LEFT) ? -1 : 1; 
 
+            var x = Math.round(frog.x)+tongueX,
+                y = Math.round(frog.y)+tongueY,
+                h = 5,
+                checkIntersect = true;
             if(count < tongue1Thresh || (count > tongue2Thresh && count < tongue3Thresh) ){
                 canvas.fillStyle = tongueColor;
-                canvas.fillRect(Math.round(frog.x)+tongueX, Math.round(frog.y)+tongueY, widthNegator*15, 5);
+                w = widthNegator*15;
+                canvas.fillRect(x, y, w, h);
+                checkIntersect = true;
             }
             else if(count >= tongue3Thresh){
                 frog.tongueOut = false;
                 frog.toungeAnimationCount = 0;
-                canvas.clearRect(Math.round(frog.x)+tongueX, Math.round(frog.y)+tongueY, widthNegator*15, 5);
+                w = widthNegator*15;
+                canvas.clearRect(x, y, w, h);
             }
             else{
                 canvas.fillStyle = tongueColor;
-                canvas.fillRect(Math.round(frog.x)+tongueX, Math.round(frog.y)+tongueY, widthNegator*30, 5);
+                w = widthNegator*15;
+                canvas.fillRect(x, y, w, h);
+                checkIntersect = true;
             }
+            //Now, w (width) might be negative, so undo that so we can more easily calculate an intersection
+            if(w < 0){
+                w *= -1;
+                x = x - w;
+            }
+            if(checkIntersect){
+                flies.forEach(function(fly){
+                    if(rectanglesIntersect(x, y, w, h, fly.x, fly.y, fly.width, fly.height)){
+                        console.log("GOT IT!");
+                    }
+                });
+            }
+
+
             
             frog.toungeAnimationCount++;
         }
@@ -345,7 +354,18 @@ var go = function(){
         // }
     };
 
-    
+    var rectanglesIntersect = function(x1, y1, w1, h1, x2, y2, w2, h2){
+
+        console.log('x1, y1, w/h = ', x1, y1, w1, h1, ' x2, y2, w/h = ', x2, y2, w2, h2);
+        if(x2+w2 >= x1 && x2 <= x1+w1){
+            if(h2+h2 >= y2 && y2 <= y1+h1){
+                return true;
+            }
+        }
+        return false;
+
+    };
+
 
     var mainInterval = function(){
         var now = Date.now();
