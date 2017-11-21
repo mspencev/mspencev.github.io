@@ -29,11 +29,11 @@
     var SIT_FACING_LEFT_OFFSET=76;
     var SIT_FACING_RIGHT_OFFSET=120;
 
-    var tonguePos = {};  //where to start drawing the tongue relative to the frog.x, frog.y
-    tonguePos[JUMPING_LEFT] = [7, 10];
-    tonguePos[JUMPING_RIGHT] = [37, 10];
-    tonguePos[SITTING_FACING_LEFT] = [7, 22];
-    tonguePos[SITTING_FACING_RIGHT] = [37, 22];
+    var relativeTonguePos = {};  //where to start drawing the tongue relative to the frog.x, frog.y
+    relativeTonguePos[JUMPING_LEFT] = [7, 10];
+    relativeTonguePos[JUMPING_RIGHT] = [37, 10];
+    relativeTonguePos[SITTING_FACING_LEFT] = [7, 22];
+    relativeTonguePos[SITTING_FACING_RIGHT] = [37, 22];
 
 
     //Tongue has the following phases when it stick out:  
@@ -110,15 +110,15 @@ var go = function(){
                 toungeAnimationCount: 0};
 
     var flies = [];
-    flies[0] = {x: 0, y: flyMinY-flyMaxY, 
-        width: 8, height: 8,    
+    flies[0] = {x: 0, y: (flyMinY - flyMaxY), 
+        w: 8, h: 8,    
         speed: 2, 
         goingLeft: false,
         startDelayCnt: 0,
         yVariation: 1,
         adjustingY: 0}; //-1, 0, 1 //adjusting up, down, not at all.
-    flies[1] = {x: canvasEl.width, y: flyMinY-flyMaxY, 
-        width: 8, height: 8, 
+    flies[1] = {x: canvasEl.width, y: (flyMinY-flyMaxY), 
+        w: 8, h: 8, 
         speed: 2, 
         goingLeft: true,
         startDelayCnt: 0,
@@ -285,67 +285,34 @@ var go = function(){
         //Draw fly
         flies.forEach(function(fly){
             canvas.fillStyle = '#FF0000';
-            canvas.fillRect(fly.x, fly.y, fly.width, fly.height);
+            canvas.fillRect(fly.x, fly.y, fly.w, fly.h);
         });
         
         //Draw the tonge
         if(frog.tongueOut){
-            var count = frog.toungeAnimationCount;
 
-            var tongueX = tonguePos[frog.actionState][0];
-            var tongueY = tonguePos[frog.actionState][1];
-            //Negate tongue width if it's facing left
-            var widthNegator = (frog.actionState === JUMPING_LEFT || frog.actionState === SITTING_FACING_LEFT) ? -1 : 1; 
+            var tongueRect = computeTongueRect();
 
-            var x = Math.round(frog.x)+tongueX,
-                y = Math.round(frog.y)+tongueY,
-                h = 5,
-                checkIntersect = true;
-            if(count < tongue1Thresh || (count > tongue2Thresh && count < tongue3Thresh) ){
-                canvas.fillStyle = tongueColor;
-                w = widthNegator*15;
-                canvas.fillRect(x, y, w, h);
-                checkIntersect = true;
-            }
-            else if(count >= tongue3Thresh){
+            canvas.fillStyle = tongueColor;
+            canvas.fillRect(tongueRect.x, tongueRect.y, tongueRect.w, tongueRect.h);
+
+            var checkIntersection = true;
+            if(frog.toungeAnimationCount >= tongue3Thresh){
                 frog.tongueOut = false;
                 frog.toungeAnimationCount = 0;
-                w = widthNegator*15;
-                canvas.clearRect(x, y, w, h);
+                checkIntersection = false;
             }
-            else{
-                canvas.fillStyle = tongueColor;
-                w = widthNegator*15;
-                canvas.fillRect(x, y, w, h);
-                checkIntersect = true;
-            }
-            //Now, w (width) might be negative, so undo that so we can more easily calculate an intersection
-            if(w < 0){
-                w *= -1;
-                x = x - w;
-            }
-            if(checkIntersect){
+
+            if(checkIntersection){
                 flies.forEach(function(fly){
-                    if(rectanglesIntersect(x, y, w, h, fly.x, fly.y, fly.width, fly.height)){
-                        console.log("GOT IT!");
+                    if(rectanglesIntersect(tongueRect, fly)){
+                        resetFly(fly);
                     }
                 });
             }
 
-
-            
             frog.toungeAnimationCount++;
         }
-
-
-        
-
-        // canvas.fillStyle = "#FF0000";
-        // canvas.fillRect(140,320,10,10);
-        // canvas.fillStyle = "#FF4400";
-        // canvas.fillRect(270,150,10,10);
-        // canvas.fillStyle = "#FF4400";
-        // canvas.fillRect(400,320,10,10);
 
         // for(var i = 140; i < 400; i+=20){
         //     var y = (frog1ABC[0]*i*i) + frog1ABC[1]*i + frog1ABC[2];
@@ -354,16 +321,54 @@ var go = function(){
         // }
     };
 
-    var rectanglesIntersect = function(x1, y1, w1, h1, x2, y2, w2, h2){
+    var computeTongueRect = function(){
+        var tongueRect = {};
+        tongueRect.x = 0;
+        tongueRect.y = 0;
+        tongueRect.w = 0;
+        tongueRect.h = 5;
 
-        console.log('x1, y1, w/h = ', x1, y1, w1, h1, ' x2, y2, w/h = ', x2, y2, w2, h2);
-        if(x2+w2 >= x1 && x2 <= x1+w1){
-            if(h2+h2 >= y2 && y2 <= y1+h1){
+        var count = frog.toungeAnimationCount;
+
+        var relativeTongueX = relativeTonguePos[frog.actionState][0];
+        var relativeTongueY = relativeTonguePos[frog.actionState][1];
+        
+        if(count < tongue1Thresh || (count > tongue2Thresh && count < tongue3Thresh) ){
+            tongueRect.w = 10;
+        }
+        else {
+            tongueRect.w = 20;
+        }
+
+        tongueRect.y = Math.round(frog.y)+relativeTongueY;
+        tongueRect.x = Math.round(frog.x)+relativeTongueX;
+
+        if(frog.actionState === JUMPING_LEFT || frog.actionState === SITTING_FACING_LEFT) { 
+            tongueRect.x = tongueRect.x - tongueRect.w;
+        }
+
+        return tongueRect;
+    };
+    var rectanglesIntersect = function(tongue, fly){
+
+        //get top-left and bottom-right corners
+        var x1a = tongue.x, 
+            y1a = tongue.y, 
+            x1b = tongue.x + tongue.w, 
+            y1b = tongue.y + tongue.h, 
+            x2a = fly.x, 
+            y2a = fly.y, 
+            x2b = fly.x + fly.w, 
+            y2b = fly.y + fly.h;
+
+        if((x2a > x1a && x2a < x1b) || (x1a > x2a && x1a < x2b))
+        {
+            if((y2a > y1a && y2a < y1b) || (y1a > y2a && y1a < y2b)){
+                console.log()
                 return true;
             }
         }
         return false;
-
     };
 
 
