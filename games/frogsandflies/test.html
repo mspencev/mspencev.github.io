@@ -11,6 +11,7 @@
  .wrapper {
    width: 850px;
    margin: 20px auto;
+   position: relative;
 }
 
 
@@ -81,11 +82,26 @@ var go = function(){
     var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
     window.requestAnimationFrame = requestAnimationFrame;
 
-    canvasEl = document.createElement('canvas');
+    //Add the canvas inside the wrapper
+    var canvasEl = document.createElement('canvas');
     canvas = canvasEl.getContext('2d');
     canvasEl.width = 640;
     canvasEl.height = 387;
     document.getElementsByClassName('wrapper')[0].appendChild(canvasEl);
+
+    //Also add the score tags in the wrapper
+    var score1El = document.createElement('score1');
+    score1El.setAttribute('class', 'score1');
+    score1El.setAttribute('id', 'score1');
+    score1El.textContent = "00";
+
+    var score2El = document.createElement('score2');
+    score2El.setAttribute('class', 'score2');
+    score2El.setAttribute('id', 'score2');
+    score2El.textContent = "00";
+    
+    document.getElementsByClassName('wrapper')[0].appendChild(score1El);
+    document.getElementsByClassName('wrapper')[0].appendChild(score2El);
 
     // Background
     var background = {x: 0, y: 0, width: 640, height: 387};
@@ -490,9 +506,6 @@ Frog.prototype.update = function(modifier){
 }
 
 </script>
-
-<div class="score1" id='score1'>00</div>
-<div class="score2" id='score2'>00</div>
 
 <div class="wrapper"></div>
 </body>
