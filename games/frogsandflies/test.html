@@ -2,19 +2,75 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css?family=Rancho&effect=shadow-multiple">
+
 <style>
 * {
    margin: 0;
    padding: 0;
  }
 
- .wrapper {
+.usage {
+    position: absolute;
+    /* width: 330px;
+    height: 330px; */
+    /* font-size: 40px; */
+    /* font-weight: bold; */
+    /* font-variant: small-caps; */
+    /* font-family: Arial, Helvetica, sans-serif; */
+    top: 70px;
+    left: 190px;
+
+    font-family: 'Rancho', serif;
+    font-size: 48px;
+}
+
+.wrapper {
    width: 850px;
    margin: 20px auto;
    position: relative;
 }
 
+.usageFont {
+    position: absolute;
+    width: 330px;
+    height: 330px;
+    font-size: 40px;
+    font-weight: bold;
+    font-variant: small-caps;
+    font-family: Arial, Helvetica, sans-serif;
+    top: 70px;
+    left: 190px;
+}
 
+.usageOK{
+    position: absolute;
+    top: 320px;
+    left: 250px;
+    
+    display: inline-block;
+    padding: 15px 25px;
+    font-size: 24px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    outline: none;
+    color: #fff;
+    background-color: #333333;
+    /* border: none; */
+    border-width: 3px;
+    border-radius: 5px;
+    /* box-shadow: 0 5px #666; */
+}
+
+.usageOK:hover {background-color: #666666}
+
+.usageOK:active {
+  background-color: #3e8e41;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}
 .score1, .score2 {
     position: absolute;
     width: 30px;
@@ -37,7 +93,59 @@
 </style>
 </head>
 <body onload="go()">
+
+
+        <div class="wrapper">
+                <canvas id="canvas"></canvas>
+                <div class="score1" id="score1">00</div>
+                <div class="score2" id="score2">00</div>
+                <div class="usage font-effect-shadow-multiple" id="usage">Gray Frog:<br>  
+                    Z=Jump, X=Tongue 
+                    <br>Red Frog: 
+                    <br>Up=Jump, Enter=Tongue</div>
+                
+                <button class="usageOK" id="usageOK" onclick="handleOKClick()">Got it!</button>
+        </div>
+            
+
+
 <script>
+    function handleOKClick() {
+        document.getElementById("usage").style.display = "none";
+        document.getElementById("usageOK").style.display = "none";
+
+    }
+
+    //Add the canvas inside the wrapper
+    var canvasEl = document.getElementById('canvas');
+    canvas = canvasEl.getContext('2d');
+    canvasEl.width = 640;
+    canvasEl.height = 387;
+
+    // //Also add the score tags in the wrapper
+    // var score1El = document.createElement('score1');
+    // score1El.setAttribute('class', 'score1');
+    // score1El.setAttribute('id', 'score1');
+    // score1El.textContent = "00";
+
+    // var score2El = document.createElement('score2');
+    // score2El.setAttribute('class', 'score2');
+    // score2El.setAttribute('id', 'score2');
+    // score2El.textContent = "00";
+
+    // document.getElementsByClassName('wrapper')[0].appendChild(score1El);
+    // document.getElementsByClassName('wrapper')[0].appendChild(score2El);
+
+    // var usageEl = document.createElement('div');
+    // usageEl.setAttribute('class', 'usageFont');
+    // usageEl.textContent = 'Gray Frog:  Z=Jump, X=Tongue Red Frog: Up=Jump, Enter=Tongue';
+    // document.getElementsByClassName('wrapper')[0].appendChild(usageEl);
+
+    // var usageOKEl = document.createElement('button');
+    // usageOKEl.setAttribute('class', 'usageOK');
+    // usageOKEl.textContent = 'OK';
+    // document.getElementsByClassName('wrapper')[0].appendChild(usageOKEl);
+
 
 
     //Frog action states:
@@ -82,27 +190,7 @@ var go = function(){
     var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame || window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
     window.requestAnimationFrame = requestAnimationFrame;
 
-    //Add the canvas inside the wrapper
-    var canvasEl = document.createElement('canvas');
-    canvas = canvasEl.getContext('2d');
-    canvasEl.width = 640;
-    canvasEl.height = 387;
-    document.getElementsByClassName('wrapper')[0].appendChild(canvasEl);
-
-    //Also add the score tags in the wrapper
-    var score1El = document.createElement('score1');
-    score1El.setAttribute('class', 'score1');
-    score1El.setAttribute('id', 'score1');
-    score1El.textContent = "00";
-
-    var score2El = document.createElement('score2');
-    score2El.setAttribute('class', 'score2');
-    score2El.setAttribute('id', 'score2');
-    score2El.textContent = "00";
-    
-    document.getElementsByClassName('wrapper')[0].appendChild(score1El);
-    document.getElementsByClassName('wrapper')[0].appendChild(score2El);
-
+   
     // Background
     var background = {x: 0, y: 0, width: 640, height: 387};
     var backgroundReady = false;
@@ -507,6 +595,6 @@ Frog.prototype.update = function(modifier){
 
 </script>
 
-<div class="wrapper"></div>
+
 </body>
 </html>
