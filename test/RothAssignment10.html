@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<!-- Holly Roth
+	 12/6/2017
+	 CWB 205 470 
+	 Assignment 10 -->
+<head>
+	<title></title>
+	<!-- Default style settings -->
+	<style>
+		body{
+			background-color:#FFCCE6;
+			font-family:arial;
+		}
+		#bookshelf{
+			border-style: solid;
+			border-color:#FF0683;
+			border-width:5px;
+		}
+	</style>
+	<script>
+		
+			var totalVisits = 1;
+		//This function creates three cookies: one to record the date of the current visit, one to record the time of the current visit,
+		//and one to start counting the number of visits the local user has made to the site.
+		function createCookie(ex,visDate,time){
+			//Variables
+			var expdate = ex;
+			var visitDateString = visDate;
+			var totalVisits = 1;
+			var t = time;
+			
+			//Create a cookie with the number of visits to the site. It will start at 1, since the user is at the site.
+			//Set the cookie to expire 1 year from the current date.
+			document.cookie = "siteVisits" + "=" + totalVisits + ";expires=" + expdate + ";";
+			//Create a cookie with the current date to track when the site was visited.
+			//Set the cookie to expire 1 year from the current date.
+			document.cookie = "lastVisited" + "=" + visitDateString + ";expires=" + expdate + ";";
+			//Create a cookie with the current time to track when the site was visited.
+			//Set the cookie to expire 1 year from the current date.
+			document.cookie = "timeLastVisited" + "=" + t + ";expires=" + expdate + ";";
+			
+			//Provide a message telling the user the site has never been visited.
+			document.getElementById("siteVisitsMessage").textContent = "You have never visited this site.";
+		}
+		
+		//This function updates the cookies with the new date and time for when the site was last visited and adds a visit to the total 
+		//visits to the site. The function will display the last time the site was visited and the number of times the site has been visited.
+		function updateCookie(ex,visDate, time){
+			//Variables
+			var expdate = ex;
+			var visitDateString = visDate;
+			var lastVisit;
+			var totalVisits;
+			var lastVisitTime;
+			var cookieArray = document.cookie.split("; ");
+			var t = time;
+			
+
+			for(i=0;i<cookieArray.length;i++){
+				if(cookieArray[i].split("=")[0]=="siteVisits"){
+					totalVisits = cookieArray[i].split("=")[1];
+				}
+				if(cookieArray[i].split("=")[0]=="lastVisited"){
+					lastVisit = cookieArray[i].split("=")[1];
+				}
+				if(cookieArray[i].split("=")[0]=="timeLastVisited"){
+					lastVisitTime = cookieArray[i].split("=")[1];
+				}
+			}
+
+			totalVisits = parseInt(totalVisits)+1;
+			
+			document.getElementById("lastVisitMessage").textContent = "Your last visit was " + lastVisit + 
+				" at " + lastVisitTime + "."; 
+			document.getElementById("siteVisitsMessage").textContent = "Number of times you have visited: " + totalVisits;
+			
+			document.cookie = "siteVisits" + "=" + totalVisits + ";expires=" + expdate + ";";
+			document.cookie = "lastVisited" + "=" + visitDateString + ";expires=" + expdate + ";";
+			document.cookie = "timeLastVisited" + "=" + t + ";expires=" + expdate + ";";
+		}
+		function checkCookies(){
+			var expdate = new Date();
+			var visitDate = new Date();
+			var y = visitDate.getFullYear();
+			var m = visitDate.getMonth()+1;
+			var d = visitDate.getDate();
+			var mm = visitDate.getMinutes();
+			var h = visitDate.getHours();
+			var s = visitDate.getSeconds();
+			if(mm<=9){mm = "0" + mm};
+			if(s<=9){s = "0" + s};
+			var t = h + ":" + mm + ":" + s;
+			var visitDateString = m + "/" + d + "/" + y;
+			expdate.setFullYear(expdate.getFullYear()+1);
+			expdateGMT = expdate.toGMTString();
+			if (document.cookie == ""){
+				createCookie(expdateGMT,visitDateString,t);
+			}
+			else{
+				updateCookie(expdateGMT,visitDateString,t);
+			}
+		}
+		window.onload=checkCookies;
+	</script>
+</head>
+<body>
+	<div>
+		<p id="lastVisitMessage"></p>
+		<p id="siteVisitsMessage"></p>
+		<img src="bookshelf.jpg" id="bookshelf" title="Superhero Barbies on Bookshelf" height="70%" width="70%" onclick="openLinks()" />
+	</div>
+</body>
+</html>
