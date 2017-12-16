@@ -1,5 +1,7 @@
 body {
-    background-color: white;
+    /* background-color: #7595AE; */
+    background-color: #f9f9f9;
+    
     font-family: "Open Sans", sans-serif;
     padding: 5px 25px;
     font-size: 18px;
@@ -12,8 +14,81 @@ body {
     font-size: 32px;
   }
 
+.youth-table {
+    font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.youth-table td, .youth-table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+/* .youth-table tr:nth-child(even){background-color: #909394;} */
+.youth-table tr:nth-child(even){background-color: #f0f2f3;}
+
+
+/* .youth-table tr:hover {background-color: #ddd;} */
+
+.youth-table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    /* background-color: #557A95; */
+    background-color: white;
+    color: black;
+}
+
+.youth-table .row-header {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    /* background-color: #557A95; */
+    background-color: white
+    
+    color: black;
+}
+
+
+
+/* female div */
+.F-class {
+    background-color: rgb(236, 184, 193);
+}
+
+
+/* male div */
+.M-class {
+    background-color: rgb(150, 209, 227);
+    /* color: white; */
+}
 
 /*table tr td {height:40px; border:1px solid red;} */
 td {height:40px; border:1px solid black;}
 
+.name{
+    
+    margin-bottom: 5px;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-top: 5px;
+    padding-bottom: 3px;
+    padding-left: 5px;
+    padding-top: 3px;
+    
+}
+
+div.tooltip {	
+    position: absolute;			
+    text-align: left;			
+    width: 145px;					
+    height: 30px;					
+    padding: 10px;	
+    font: 14px sans-serif;		
+    background: rgb(163, 199, 240);	
+    border: 5px;		
+    border-radius: 5px;			
+    /* pointer-events: none;			 */
+}
 
