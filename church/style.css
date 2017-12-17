@@ -4,21 +4,62 @@ body {
     
     font-family: "Open Sans", sans-serif;
     padding: 5px 25px;
-    font-size: 18px;
+    font-size: 12px;
     margin: 0;
     color: #444;
   }
-  
+  pre {
+    font-family: "Open Sans", sans-serif;
+    font-size: 14px;
+  }
+
   h1 {
     font-family: "Merriweather", serif;
     font-size: 32px;
   }
 
+ .container{
+    display: flex;    
+}
+
+.flex-item{
+    flex-grow: 0;
+}
+
+
+#birthday-table-wrapper{
+    margin-right: 40px;
+}
+
+
+#advancement-table-wrapper td, 
+#advancement-table-wrapper th{
+    font-size: 10px;
+    padding-bottom: 1px;
+    padding-top: 1px;
+}
+
+
+#advancement-table-wrapper .F-class, 
+#advancement-table-wrapper .M-class{
+    margin-top: 1px;
+    margin-bottom: 1px;
+    padding-bottom: 1px;
+    padding-top: 1px
+    
+}
+
+
+
+
 .youth-table {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
     border-collapse: collapse;
     width: 100%;
+    float:left;
 }
+
+/* th { white-space:pre } */
 
 .youth-table td, .youth-table th {
     border: 1px solid #ddd;
@@ -84,10 +125,11 @@ div.tooltip {
     text-align: left;			
     width: 145px;					
     height: 30px;					
-    padding: 10px;	
-    font: 14px sans-serif;		
-    background: rgb(163, 199, 240);	
-    border: 5px;		
+    padding: 12px;	
+    font: 12px sans-serif;		
+    background: rgb(208, 210, 212);	
+    border: 5px;	
+    border-color: rgb(12, 6, 6);	
     border-radius: 5px;			
     /* pointer-events: none;			 */
 }
