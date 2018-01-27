@@ -4,28 +4,32 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Youth Tracker</title>
+    <script src="config.js"></script>
+    
     <script type="text/javascript" src="../d3/d3.v4.js"></script>
     <!-- <script src="https://d3js.org/d3.v4.min.js"></script> -->
     
-    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-     -->
-    <!-- <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> -->
     <link rel="stylesheet" href="style.css">
   </head>
   <!-- make page resopnsive to screen size -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <body>
-    <h1>Youth Tracker</h1>
-    <div id='date'></div>
+    <!-- <h1>Youth Tracker</h1> -->
+    <nav>
+        <div id='date'></div>
+        <div id='anchors'></div>
+        <div class="container" id="table-container"></div>
+
+    </nav>
+
+<!-- 
+    .container{
+        display: flex;    
+    }
     
-    <div class="container">
-            <div class="fixed" id='birthday-table-wrapper'></div>
-            <div class="flex-item" id='advancement-table-wrapper'></div>
-            <div class='flex-item'></div>
-          </div>
+    .flex-item{
+        flex-grow: 0;
+    } */ -->
   <script>
 
     ////////////////////////
@@ -37,37 +41,11 @@
                         .attr("class", "tooltip")				
                         .style("opacity", 0);
     
-    var monthNames = ["January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    ];
+   
 
     var now = new Date();
-    var cutOffDate = new Date('1 Sep 2006'); //for school
     
-    //Data Arrays
-    var bdayTableData = []; //3D array:  month x group(ex: deacon/beehive) x names in group
-    for(var i =0; i < 12; ++i){
-        bdayTableData[i] = []; //one array for each month
-        for(var j =0; j < 3; ++j){
-            bdayTableData[i][j] = []; //one array for each group ([deacons/beehibes], [teachers/miamaids], [priests/laurels])
-        }
-    }
-
-    var advancementTableData = []; //3D array:  month x group(ex: deacon/beehive) x names in group
-    for(var i=0; i < 24; ++i){
-        advancementTableData[i] = []; //24 months per group
-        for(var j =0; j < 4; ++j){    //4 instead of 3 so we'll have a column header for the row header
-            advancementTableData[i][j] = [];
-            if(j === 0){
-                advancementTableData[i][j][0] = i;
-            }
-        }
-    }
-
-         //Array(12).fill(Array(3).fill([])); //12X3 array of arrays -- indexing into it wasn't working right.
-
-    //Data we'll need to access while creating elements later
-    var hashData = {}; //{'Sam': {gender: M, bday: ..., age: 15, etc...}}
+    var tableData = {}; //Key=table title, value = 3D array of data
 
     updateTimestamp();
 
@@ -79,79 +57,156 @@
         dateEl.innerHTML = 'Last updated: ' + d.toLocaleString();
     };
 
+
     function retrieveData() {
         // Read the data from a CSV file
-        // d3.text('http://mspencev.github.io/church/data.csv', function(error, data){
-        d3.text('data.csv', function(error, data){ //for Firefox testing
+        d3.text('http://mspencev.github.io/church/data.csv', function(error, data){
+        // d3.text('data.csv', function(error, data){ //for Firefox testing
             if (error) throw error;
 
-            //columnNames = d3.csv.parseRows(data)[0].slice(1);
-            var rawData = d3.csvParse(data); //array of objects {Name:..., Gender: F/M, Birthday:...} 
-            
-            populateDataTables(rawData);
-            createBirthdayTable(bdayTableData, ['Beehives/ \nDeacons', 'Mia Maids/\nTeachers', 'Laurels/\nPriests']);
-            createAdvancementTable(advancementTableData, ['Months \nin class', 'Beehives/\nDeacons', 'Mia Maids/\nTeachers', 'Laurels/\nPriests'])
+            var rawData = d3.csvParse(data); //array of objects {LastName: ..., Other: Grayson Michael	M	0	5 Sep 2017} 
+            //Example of other:  'Grayson Michael	M	0	5 Sep 2017'  (first name, middl, gender, age, b-day)
+
+            var rawDataObjects = rawData.map(function(entry){
+                var lastName = entry.LastName;
+                var other = entry.Other.trim().split('\t'); //["Grayson Michael", "M", "0", "5 Sep 2017"]
+                var firstInitial = other[0][0];
+                var gender = other[1];
+                var bDayStr = other[3];
+                var bDay = new Date(bDayStr.trim());
+                console.log('Name: ', firstInitial, lastName);
+                return {'name': firstInitial + '. ' + lastName,
+                         'gender': gender,
+                         'bDay': bDay,
+                         'age': getAge(bDay),
+                         'grade': getGrade(bDay)
+                 }
+            });
+
+            createEmptyTableData();
+
+            populateTableData(rawDataObjects);
+            createTables(rawDataObjects);
+            createAnchorLinks();
+            // createAdvancementTable(advancementTableData, ['Months \nin class', 'Beehives/\nDeacons', 'Mia Maids/\nTeachers', 'Laurels/\nPriests'])
         });
-    }
+    };
+    
+    function createEmptyTableData(){
+
+        config.tables.forEach(function(tableConfig){
+
+            var dataArray = [];
+            for(var i =0; i < tableConfig.rows.length; ++i){
+                dataArray[i] = []; //one array for each month
+                for(var j =0; j < tableConfig.groups.length; ++j){
+                    dataArray[i][j] = []; //one array for each group (ex:[deacons/beehibes], [teachers/miamaids], [priests/laurels])
+                }
+            }
+            tableData[tableConfig.title] = dataArray;
+        }
+    )};
+
+    /**
+     *  Populate the table data for each table -- a 3-D array: Month, Column, Cell Entry
+     * 
+     * The resulting table date might look something like this:
+     *   [ 
+     *     [ [ {Deacon1Info} ],[  ],[ {Priest1Info} ] ],  //for january
+     *     [ [ {Deacon2Info}, {Beehive1Info} ],[ {MiaMaid1Info} ],[  ] ],  //February
+     *     [ [  ],[  ],[  ] ],
+     *     [ [ {Beehive21Info} ],[  ],[  ] ],  
+     *     etc...
+     *   ]
+     */
+    function populateTableData(rawDataObjects) {
+
+        //For each table config
+        config.tables.forEach(function(tableConfig){
+
+            var rawData = getRelevantData(tableConfig, rawDataObjects)
+            rawData.map(function(entry){
+                
+                var month = entry.bDay.getMonth();
+                var column = getAgeColumnIndex(entry.bDay, tableConfig);     
+                // var monthInProgram = getMonthInProgram(bDay);      
+
+                if(column < 0){
+                    //TODO add to incoming youth
+                }
+                else if(column >= tableConfig.groups.length) {
+                    //TODO add to recently graduated youth
+                }
+                else{
+                    tableData[tableConfig.title][month][column].push(entry);
+                    // advancementTableData[monthInProgram][column+1].push(name); //+1 for the column header
+                }
+
+            });
+        });
+    };
+        
+
+
     
 
-    function populateDataTables(data) {
-        data.map(function(entry){
+    /**
+     *  Return an array of data, filtered by the given table config, so each 
+     *  entry's age fits the table constraints.
+     */
+    function getRelevantData(tableConfig, data){
+
+        return data.filter(function(entry){
+
+            var reduceMin = ( min, cur ) => Math.min( min, cur );
+            var reduceMax = ( max, cur ) => Math.max( max, cur );
+
+            var minAge = tableConfig.groups.map( item => item.minAge )
+                                .reduce( reduceMin, Infinity );
+
+            var maxAge = tableConfig.groups.map( item => item.maxAge )
+                                .reduce( reduceMax, Infinity );
+
+            return entry.age >= minAge && entry.age <= maxAge;
+        });
+    };
+
+    function createTables(rawDataObjects){
+        var self = this;
+
+        config.tables.forEach(function(tableConfig, i){
             
-            var name = entry.Name.trim();
-            var bDay = new Date(entry.Birthday.trim());
-            var month = bDay.getMonth();
-            var column = getAgeColumnIndex(bDay);     
-            var monthInProgram = getMonthInProgram(bDay);      
-
-            if(column < 0){
-                //TODO add to incoming youth
-            }
-            else if(column > 2) {
-                //TODO add to recently graduated youth
-            }
-            else{
-                bdayTableData[month][column].push(name);
-                advancementTableData[monthInProgram][column+1].push(name); //+1 for the column header
-            }
-
-            //update our gender lookup
-            hashData[name] = {};
-            hashData[name].gender = entry.Gender;
-            hashData[name].bday = bDay;
-            hashData[name].age = getAge(bDay);
-            hashData[name].grade = getGrade(bDay);
+            createTable(tableConfig, tableData[tableConfig.title], 'table'+i, i);
 
         });
     };
 
+    function createTable(tableConfig, data, tableId, i){
+        
+        var tableContainer = d3.select('#table-container');
 
-    /**
-     *  Populate the 'bdayTableData' -- a 3-D array: Month, Column, Cell Entry
-     * 
-     * The resulting table date might look something like this:
-     *   [ 
-     *     [ [ NameOfDeacon ],[  ],[ NameOfPriest ] ],  //for january
-     *     [ [ NameOfDeacon, nameOfBeehive ],[ NameOfMaiMaid ],[  ] ],  //February
-     *     [ [  ],[  ],[  ] ],
-     *     [ [ NameOfBeehive ],[  ],[  ] ],  
-     *     etc...
-     *   ]
-     */
-    function createBirthdayTable(tableData, columns){
+        tableContainer.append('div')
+            .text(tableConfig.title)
+            .attr('class', 'table-title')
+            .attr('id', 'tableTitle'+ i)
+            .append('a')
+                .attr('class', 'anchor')
+                .attr('href', '#date')
+                .style('padding-left', '20px')
+                .text('(top)');
 
-        var table = d3.select('#birthday-table-wrapper').append('table')
+        var table = tableContainer.append('table')
                         .attr('class', 'youth-table')//'table table-striped table-bordered table-condensed')
-                        .attr('id','table');
+                        .attr('id',tableId);
         var thead = table.append('thead')
         var	tbody = table.append('tbody');
 
         // append the header row
         var hrow = thead.append('tr'); //to support the row header, we want: <thead> <tr> <td></td> <th>...</th> <th>...</th>...
         hrow.selectAll('th')
-            .data(columns).enter()
+            .data(tableConfig.groups).enter()
             .append('th').append('pre')
-            .text(function (column) { return column; });
+            .text(function (group) { return group.name; });
 
         // Insert a header cell for the month's row header
         hrow.insert('th', ":first-child")
@@ -160,10 +215,16 @@
         // create the table
         //Thanks to:  http://jsfiddle.net/f4vAm/1/ for getting me started
         tbody.selectAll("tr")                 
-            .data(tableData)
+            .data(data)
             .enter()  //for each row of data (one for each month)...
                 .append("tr")  //add a row header
-                    .attr('class', 'row-header')
+                    .attr('class', function(d, i){
+                        var cls = 'row-header';
+                        if(i == now.getMonth()){
+                            cls += ' curr-row';
+                        }
+                        return cls;
+                    })
                 .selectAll("td")   
                 .data( function(d,i,j) { 
                     return d; } ) 
@@ -175,129 +236,71 @@
                     .enter()  // for each cell value
                         .append('div')    // add a div with the value (the name)
                             .attr('class', function(d, i){
-                                return hashData[d].gender + '-class' + ' name';
+                                return d.gender + '-class' + ' name';
                             })             
                             .text( function(d,i,j) { 
-                                return d; } )
+                                return d.name + ' ('+d.age+')'; } )
                             .style("cursor", "default")
                             .on("mouseover", function(d) {		
                                 // toolTipDiv.transition()		
                                 //     .duration(10)		
                                 toolTipDiv.style("opacity", 1.0)
-                                    // .style("cursor", "default"); 		
                                 toolTipDiv.html(function(){
-                                    var date = hashData[d].bday;
-                                    return 'Age: ' + hashData[d].age + '<br>B-day: ' + 
-                                            monthNames[date.getMonth()] + '  ' + date.getDate() +
-                                            '<br>Grade (calc): ' + hashData[d].grade;
+                                    var date = d.bDay;
+                                    return 'Age: ' + d.age + '<br>B-day: ' + 
+                                            tableConfig.rows[date.getMonth()] + '  ' + date.getDate() +
+                                            '<br>Grade (calc): ' + d.grade;
                                 })	
                                     .style("left", (d3.event.pageX + 10) + "px")		
                                     .style("top", (d3.event.pageY - 20) + "px");	
                                 })					
                             .on("mouseout", function(d) {		
-                                // toolTipDiv.transition()		
-                                //     .duration(10)		
                                 toolTipDiv.style("opacity", 0)
-                                    // .style("cursor", "default"); 		
 
                             });
 
             //Now add the row header values
-            d3.selectAll('.row-header')
+            d3.selectAll('#' + tableId + ' .row-header')
                 .each(function(d, i){
                     d3.select(this) // Transform to d3 Object
                        .insert('td', ":first-child")
-                        .text(function(){
-                            return monthNames[i];
+                        .text(function(d){
+                            return tableConfig.rows[i];
                         });
                 })
-    }
-    
+    };
+
     /**
-     * Just like birthday table, but the values for the firt row header column 
-     * are already in the data table, and there are 24 rows.
+     * returns column index for age, based on the given table config.
      */
-    function createAdvancementTable(tableData, columns){
+     function getAgeColumnIndex(bDay, tableConfig){
+        var age = getAge(bDay),
+            colIndex = -1,
+            transitionOnBDay = tableConfig.transitionOnBday;
 
-        var table = d3.select('#advancement-table-wrapper').append('table')
-                        .attr('class', 'youth-table')//'table table-striped table-bordered table-condensed')
-                        .attr('id','table');
-        var thead = table.append('thead')
-        var	tbody = table.append('tbody');
+        if(!transitionOnBDay){
+            age = getAgeOnJan1st(bDay);
+        }
 
-        // append the header row
-        var hrow = thead.append('tr'); //to support the row header, we want: <thead> <tr> <th></th> <th>...</th> <th>...</th>...
-        hrow.selectAll('th')
-            .data(columns).enter()
-            .append('th').append('pre')
-                .text(function (column) { return column; });
-
-        // create the table
-        //Thanks to:  http://jsfiddle.net/f4vAm/1/ for getting me started
-        tbody.selectAll("tr")                 
-            .data(tableData)
-            .enter()  //for each row of data (one for each month)...
-                .append("tr")  //add a row header
-                    .attr('class', 'row-header')
-                .selectAll("td")   
-                .data( function(d,i,j) { 
-                    return d; } ) 
-                .enter()  //for each column 
-                    .append("td")   //add a td
-                    .selectAll('div')
-                    .data(function(d){
-                        return d;}) 
-                    .enter()  // for each cell value
-                        .append('div')    // add a div with the value (the name)
-                            .attr('class', function(d, i){
-                                if(!hashData[d]){
-                                    return '';
-                                }
-                                return hashData[d].gender + '-class' + ' name';
-                            })             
-                            .text( function(d,i,j) { 
-                                return d; } )
-                            .style("cursor", "default")
-                            .on("mouseover", function(d) {		
-                                // toolTipDiv.transition()		
-                                //     .duration(10)		
-                                toolTipDiv.style("opacity", 1.0)
-                                    // .style("cursor", "default"); 		
-                                toolTipDiv.html(function(){
-                                    if(!hashData[d]){
-                                        return '';
-                                    }
-                                    var date = hashData[d].bday;
-                                    return 'Age: ' + hashData[d].age + '<br>B-day: ' + 
-                                            monthNames[date.getMonth()] + '  ' + date.getDate()+
-                                            '<br>Grade (calc): ' + hashData[d].grade;
-                                })	
-                                    .style("left", (d3.event.pageX + 10) + "px")		
-                                    .style("top", (d3.event.pageY - 20) + "px");	
-                                })					
-                            .on("mouseout", function(d) {		
-                                // toolTipDiv.transition()		
-                                //     .duration(10)		
-                                toolTipDiv.style("opacity", 0)
-                                    // .style("cursor", "default"); 		
-
-                            });
-    }
-    
+        return tableConfig.groups.findIndex(function(group){
+                return (age >= group.minAge && age <= group.maxAge);
+        });        
+    };
 
     /**
      * Return the age based on the given birth day Date.
      */
     function getAge(bDay){
-        var year = bDay.getFullYear();
-        var month = bDay.getMonth();
-        var date = bDay.getDate();
+        var year = bDay.getFullYear(),
+            month = bDay.getMonth(),
+            date = bDay.getDate(),
+            nowMonth = now.getMonth();
 
         var age = now.getFullYear() - year;
-        if(now.month < month){
+        if(nowMonth < month){
             age -= 1;
         }
-        if(now.month === month){
+        if(nowMonth === month){
             if(now.getDate() < date){
                 age -= 1;
             }
@@ -305,31 +308,107 @@
         return age;
     };
 
-    /**
-     * returns column index for age (0, 1, 2).  
-     *         Or, -1 if youth is too young, and 3 if too old.
-     */
-    function getAgeColumnIndex(bDay){
-        var age = getAge(bDay);
-
-        if(age >= 12 && age <= 13){
-            return 0;
+    function hadBirthdayThisYear(bDay){
+        if(bDay.getMonth() < now.getMonth()){
+            return true;
         }
-        else if(age >= 14 && age <= 15){
-            return 1;
+        else if(bDay.getMonth() > now.getMonth()){
+            return false;
         }
-        else if(age >= 16 && age <= 18){
-            return 2;
+        else{
+            if(bDay.getDate() <= now.getDate()){
+                return true;
+            }
+            return false;
         }
-
-        if(age < 12){
-            return -1;
-        }
-        if(age > 18){
-            return 3;
-        }
-        
     };
+
+    function getAgeOnJan1st(bDay){
+        var age = getAge(bDay);
+        if(hadBirthdayThisYear(bDay)){
+            return age - 1;
+        }
+        return age;
+    }
+
+
+    
+    // /**
+    //  * Just like birthday table, but the values for the firt row header column 
+    //  * are already in the data table, and there are 24 rows.
+    //  */
+    // function createAdvancementTable(tableData, columns){
+
+    //     var table = d3.select('#advancement-table-wrapper').append('table')
+    //                     .attr('class', 'youth-table')//'table table-striped table-bordered table-condensed')
+    //                     .attr('id','table');
+    //     var thead = table.append('thead')
+    //     var	tbody = table.append('tbody');
+
+    //     // append the header row
+    //     var hrow = thead.append('tr'); //to support the row header, we want: <thead> <tr> <th></th> <th>...</th> <th>...</th>...
+    //     hrow.selectAll('th')
+    //         .data(columns).enter()
+    //         .append('th').append('pre')
+    //             .text(function (column) { return column; });
+
+    //     // create the table
+    //     //Thanks to:  http://jsfiddle.net/f4vAm/1/ for getting me started
+    //     tbody.selectAll("tr")                 
+    //         .data(tableData)
+    //         .enter()  //for each row of data (one for each month)...
+    //             .append("tr")  //add a row header
+    //                 .attr('class', 'row-header')
+    //             .selectAll("td")   
+    //             .data( function(d,i,j) { 
+    //                 return d; } ) 
+    //             .enter()  //for each column 
+    //                 .append("td")   //add a td
+    //                 .selectAll('div')
+    //                 .data(function(d){
+    //                     return d;}) 
+    //                 .enter()  // for each cell value
+    //                     .append('div')    // add a div with the value (the name)
+    //                         .attr('class', function(d, i){
+    //                             if(!hashData[d]){
+    //                                 return '';
+    //                             }
+    //                             return hashData[d].gender + '-class' + ' name';
+    //                         })             
+    //                         .text( function(d,i,j) { 
+    //                             return d; } )
+    //                         .style("cursor", "default")
+    //                         .on("mouseover", function(d) {		
+    //                             // toolTipDiv.transition()		
+    //                             //     .duration(10)		
+    //                             toolTipDiv.style("opacity", 1.0)
+    //                                 // .style("cursor", "default"); 		
+    //                             toolTipDiv.html(function(){
+    //                                 if(!hashData[d]){
+    //                                     return '';
+    //                                 }
+    //                                 var date = hashData[d].bday;
+    //                                 return 'Age: ' + hashData[d].age + '<br>B-day: ' + 
+    //                                         monthNames[date.getMonth()] + '  ' + date.getDate()+
+    //                                         '<br>Grade (calc): ' + hashData[d].grade;
+    //                             })	
+    //                                 .style("left", (d3.event.pageX + 10) + "px")		
+    //                                 .style("top", (d3.event.pageY - 20) + "px");	
+    //                             })					
+    //                         .on("mouseout", function(d) {		
+    //                             // toolTipDiv.transition()		
+    //                             //     .duration(10)		
+    //                             toolTipDiv.style("opacity", 0)
+    //                                 // .style("cursor", "default"); 		
+
+    //                         });
+    // }
+    
+
+    
+
+    
+
 
     /**
      * Returns a number between 0 and 23, identifying 
@@ -376,7 +455,7 @@
     function getGrade(bDay){
         var age = getAge(bDay);
         var bdayMonth = bDay.getMonth();
-        var cutOffMonth = cutOffDate.getMonth();
+        var cutOffMonth = config.cutOffDate.getMonth();
         var nowMonth = now.getMonth();
         var grade = age - 5;
 
@@ -384,6 +463,21 @@
             grade = grade - 1;
         }
         return grade;
+    }
+
+    function createAnchorLinks(){
+        d3.select('#anchors').selectAll("a")                 
+            .data(config.tables)
+            .enter()  //for each table config
+                .append("a")  //add a row header
+                    .attr('href', function(d, i){
+                        return '#tableTitle' + i;
+                    })
+                    .attr('class', 'anchor')
+                    .style('display',' block')
+                    .text(function(d){
+                        return d.title;
+                    })
     }
 
   </script>
