@@ -70,7 +70,7 @@
             var rawDataObjects = rawData.map(function(entry){
                 var lastName = entry.LastName;
                 var other = entry.Other.trim().split('\t'); //["Grayson Michael", "M", "0", "5 Sep 2017"]
-                var first = other[0];
+                var first = other[0].split(' ')[0]; //Don't need the middle name(s)
                 var gender = other[1];
                 var bDayStr = other[3];
                 var bDay = new Date(bDayStr.trim());
