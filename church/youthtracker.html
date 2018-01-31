@@ -60,8 +60,8 @@
 
     function retrieveData() {
         // Read the data from a CSV file
-        // d3.text('https://mspencev.github.io/church/tableData.csv', function(error, data){
-        d3.text('tableData.csv', function(error, data){ //for Firefox testing
+        d3.text('https://mspencev.github.io/church/tableData.csv', function(error, data){
+        // d3.text('tableData.csv', function(error, data){ //for Firefox testing
             if (error) throw error;
 
             var rawData = d3.csvParse(data); //array of objects {LastName: ..., Other: Grayson Michael	M	0	5 Sep 2017} 
