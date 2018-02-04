@@ -134,7 +134,6 @@ function runAdvancmentTableCode(){
                                 if(!d.name) {
                                     return '';
                                 }
-                                console.log('d.name = ', d.name, 'i, j =', i, j);
                                 return d.name + ' ('+d.age+')'; } )
                             .style("cursor", "default")
                             .on("mouseover", function(d) {		
@@ -142,7 +141,6 @@ function runAdvancmentTableCode(){
                                 //     .duration(10)		
                                 toolTipDiv.style("opacity", 1.0)
                                 toolTipDiv.html(function(){
-                                    console.log('d: ');
                                     if(!d.bDay){
                                         return '';
                                     }
