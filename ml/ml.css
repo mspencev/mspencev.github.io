@@ -1,0 +1,81 @@
+.btn-group button{
+    background-color: rgb(80, 113, 223);
+    border: 1px solid blue;
+    color: white;
+    padding: 10px 24px;
+    cursor: pointer;
+    width: 100%;
+    display: block;
+}
+
+.hideable1, .hideable2, .hideable3{
+    background-color: rgb(80, 113, 223);
+    border: 1px solid blue;
+    color: white;
+    /* padding: 10px 24px; */
+    cursor: pointer;
+    /* display: block; */
+}
+
+
+/* .btn-group button:not(:last-child){
+    border-bottom: none; 
+} */
+
+/* .btn-group button:hover {
+    background-color: rgb(0, 0, 216);
+} */
+
+.active {
+    background-color: rgb(2, 2, 136);
+}
+
+.flex-container { 
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+input {
+    width: 30px;
+}
+
+i {
+    font-size: 12px;
+}
+/* #menu #list {
+    max-height: 30px;
+    transition: max-height 0.15s ease-out;
+    overflow: hidden;
+    background: #d5d5d5;
+} */
+
+/* .hiding {
+    max-height: 0;
+    transition: max-height 1.35s ease-in;
+    overflow: hidden;
+
+} */
+
+/* TODO nameing is weird here, but is very finiky */
+.hidden {
+    max-height: 0;
+    transition: max-height 0.15s ease-out;
+    overflow: hidden;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    padding-bottom: 0;
+    padding-top: 0;
+    /* background: #d5d5d5; */
+}
+
+/* .hideable:hover { */
+.nothidden{
+    max-height: 500px;
+    transition: max-height 0.25s ease-in;
+    border-top-width: 1;
+    border-bottom-width: 1;
+    padding-bottom: 10;
+    padding-top: 10;
+    height: 40px;
+}

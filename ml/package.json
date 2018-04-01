@@ -1,0 +1,37 @@
+{
+  "name": "cs478",
+  "homepage": "",
+  "email": "",
+  "repository": "https://gitlab.io/...",
+  "version": "0.1.0",
+  "description": "Machine Leaning Tool",
+  "main": "main.js",
+  "dependencies": {
+  },
+  "scripts": {
+    "package-mac": "npm run build && electron-packager . Map --platform=darwin --arch=x64",
+    "package-linux": "npm run build-linux && electron-packager . Map --platform=linux --arch=x64",
+    "start": "electron .",
+    "test-style": "eslint .",
+    "test-integration": "npm run build && mocha",
+    "just-the-tests": "electron-mocha",
+    "test-reclass-dialog": "electron-mocha ./test/reclassDialogTest.js",
+    "test-manual-release": "electron-mocha ./test/manualRelease/manuallyReleaseTransientEventSuccess.js",
+    "test-manual-release-fail": "electron-mocha ./test/manualRelease/manuallyReleaseTransientEventFailure.js",
+    "test-secondary-event-list": "electron-mocha ./test/secondaryEventList.js",
+    "test": "npm run test-style && npm run just-the-tests",
+    "watch": "nodemon --exec \"sencha app build && npm run start\" --ext js,css --ignore build/ --ignore ext/ --ignore .sencha/",
+    "pack": "npm run build && build --dir",
+    "dist": "npm run build && build",
+    "jb": "build"
+  },
+  "author": "mspencv",
+  "license": "",
+  "devDependencies": {
+    "chai": "^4.0.2",
+    "eslint": "^3.11.0",
+    "mocha": "^3.3.0",
+    "nodemon": "^1.11.0",
+    "spectron": "^3.7.1"
+  }
+}

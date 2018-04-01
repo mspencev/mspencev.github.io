@@ -1,0 +1,48 @@
+.cbtn {
+    position: relative;
+    top: 0px;
+    left: 9px; /* width of left part (:before) */
+    overflow: visible; /* this make the :before and :after in position:absolute to appear */
+
+    background: url(img/middle.png);
+    height: 50px;
+
+    padding: 0;
+    border: 0;
+    cursor: pointer;
+}
+
+.cbtn::-moz-focus-inner,
+.cbtn:focus {
+    border: 0;
+}
+
+.cbtn:before,
+.cbtn:after {
+    content: "";
+    background: url(img/left.png);
+    width: 9px;
+    height: 50px;
+    position: absolute;
+    left: -9px; /* Same as width */
+    top: 0px;
+}
+
+.cbtn:after {
+    background: url(img/right.png);
+    width: 9px;
+    left: auto;
+    right: -9px; /* Same as width */
+}
+
+.cbtn:hover,
+.cbtn:hover:before,
+.cbtn:hover:after {
+    background-position: 0 -50px;
+}
+
+.cbtn:active,
+.cbtn:active:before,
+.cbtn:active:after {
+    background-position: 0 -100px;
+}

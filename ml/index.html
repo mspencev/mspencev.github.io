@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Youth Tracker</title>
+    <script src="config.js"></script>
+    
+    <script type="text/javascript" src="../d3/d3.v4.js"></script>
+    <script type="text/javascript" src="../jquery/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="../jqueryui/jquery-ui-1.12.1.custom/jquery-ui.min.js"></script>
+
+    <link rel="stylesheet" href="ml.css">
+
+  </head>
+  <!-- make page resopnsive to screen size -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <body>
+    <h1>Machine Learning</h1>
+    <div class="flex-container">
+      
+    <fieldset>
+      <legend>Evaluation Method</legend>
+      <div class="btn-group eval-method">
+        <button>Hold-out Set 1</button>
+        <button class="expanding1">Hold-out Set 2</button>
+        <div class="hideable1 hidden">
+            <select name="hold-out">
+                <option>1</option>
+                <option>2</option>
+            </select>
+            <i>% training</i>
+        </div>
+        <button class="expanding2">N-Fold Cross Validation</button>
+        <div class="hideable2 hidden">
+            <input type="number" name="nfold" min="1" max="5" value="1">
+            <i>Folds</i>
+        </div>
+      </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Learning Model</legend>
+    <div class="btn-group learning-model">
+        <button>Decision Tree</button>
+        <button>Backpropagation</button>
+          <button class="expanding3">Instance-based Learning</button>
+          <div class="hideable3 hidden">
+              <input type="text" name="k-nearest" value="5">
+              <i>K (for k-Nearest neighbors)</i>
+          </div>
+        <button>Bayes classification</button>
+      </div>
+  </fieldset>
+
+</div>
+    <!-- <form>
+      <fieldset id="evalMethod">
+        <legend>Evaluation Method</legend>
+        <ul>
+          <input type="radio" value="hold-out-1" name="evalMethod"></li><label>Hold-out Set 1</label>
+          <input type="radio" value="hold-out-1" name="evalMethod"></li><label>Hold-out Set 2</label>
+          <input type="radio" value="hold-out-1" name="evalMethod"></li><label>N-Fold Cross Validation</label>
+        </ul>
+        
+      </fieldset>
+    </form> -->
+    
+    <script type="text/javascript" src="ml.js"></script>
+
+  </body>
+
+
+</html>
