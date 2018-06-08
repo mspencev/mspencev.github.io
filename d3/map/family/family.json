@@ -1,0 +1,17 @@
+[{
+    'name': 'Mark Vickers',
+    'city': 'Hayward, CA',
+    'point': [-122.087015, 37.642371], //lon, lat
+    'year': 1987,
+    'id': 0,
+    'mom': -1,
+    'dad': 1
+}, {
+    'name': 'Don Vickers',
+    'city': 'Salt Lake City, UT',
+    'point': [-111.926334, 40.758225],
+    'year': 1943,
+    'id': 1,
+    'mom': -1,
+    'dad': 2
+}]
