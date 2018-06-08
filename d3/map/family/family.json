@@ -1,5 +1,4 @@
-{
-  'test':[  {
+{ 'test':[  {
     'name': 'Mark Vickers',
     'city': 'Hayward, CA',
     'point': [-122.087015, 37.642371], //lon, lat
