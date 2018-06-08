@@ -1,4 +1,5 @@
-[{
+{
+  'test':[  {
     'name': 'Mark Vickers',
     'city': 'Hayward, CA',
     'point': [-122.087015, 37.642371], //lon, lat
@@ -15,3 +16,4 @@
     'mom': -1,
     'dad': 2
 }]
+}
