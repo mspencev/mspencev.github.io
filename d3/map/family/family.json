@@ -1,4 +1,4 @@
-{ "family":[  {
+[  {
     "name": "Mark Vickers",
     "city": "Hayward, CA",
     "lat": 37.642371,
@@ -17,4 +17,4 @@
     "mom": -1,
     "dad": 2
 }]
-}
+
