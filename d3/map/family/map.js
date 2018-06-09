@@ -167,16 +167,19 @@ function renderMap(){
       return d.bbox.height;
     });
     
+  renderLines();
+  renderMarkers();
+
+};
+
+function renderMarkers() {
   // add circles to svg
   svg.selectAll("circle")
     .data(familyJson).enter()
       .append("circle")
-        .attr("cx", function (d) { 
-          console.log(d);
-          return projection([d.lon, d.lat])[0]; })
+        .attr("cx", function (d) { return projection([d.lon, d.lat])[0]; })
         .attr("cy", function (d) { return projection([d.lon, d.lat])[1]; })
-        .attr("r", "8px")
-        .attr("fill", "red")
+        .attr('class', 'marker')
         .on("mouseover", function(d) {		
           toolTipDiv.style("opacity", 1.0)
           toolTipDiv.html(function(){
@@ -189,8 +192,60 @@ function renderMap(){
       .on("mouseout", function(d) {		
           toolTipDiv.style("opacity", 0)
       });   
-};
+}
 
+function renderLines() {
+
+  let lines = getLines();
+
+  svg.selectAll("line")
+    .data(lines).enter()
+      .append("line")
+        .attr("x1", function (d) { return d.x1; })
+        .attr("y1", function (d) { return d.y1; })
+        .attr("x2", function (d) { return d.x2; })
+        .attr("y2", function (d) { return d.y2; })
+        .attr("class", function (d) { return d.isDad? "line-dad" : "line-mom"});
+}
+
+function getLines() {
+  let lines = [];
+
+  familyJson.forEach(function(person){ 
+    let id = person.id;
+    let dad = familyJson.find(function(p) { 
+      return p.id === person.dad;
+    }); 
+    let mom = familyJson.find(function(p) { 
+      return p.id === person.mom;
+    });
+    let personPt = projection([person.lon, person.lat]);
+
+    if(dad){ 
+      let dadPt = projection([dad.lon, dad.lat]);
+      lines.push({
+        "x1": personPt[0],
+        "y1": personPt[1],
+        "x2": dadPt[0],
+        "y2": dadPt[1],
+        "isDad": true
+      });
+    }
+
+    if(mom){
+      let momPt = projection([mom.lon, mom.lat]);
+      lines.push({
+        "x1": personPt[0],
+        "y1": personPt[1],
+        "x2": dadPt[0],
+        "y2": dadPt[1],
+        "isDad": false
+      });
+    }
+
+  });
+  return lines;
+}
 
 // zoom to show a bounding box, with optional additional padding as percentage of box size
 function boxZoom(box, centroid, paddingPerc) {

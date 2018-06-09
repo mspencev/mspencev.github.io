@@ -5,7 +5,7 @@
     "lon": -122.087015,
     "year": 1987,
     "id": 0,
-    "mom": -1,
+    "mom": 2,
     "dad": 1
 }, {
     "name": "Don Vickers",
@@ -14,7 +14,72 @@
     "lon": -111.926334,
     "year": 1943,
     "id": 1,
-    "mom": -1,
+    "mom": 4,
+    "dad": 3
+}, {
+    "name": "Marilyn Seegmiller",
+    "city": "Ogden, UT",
+    "lat": 41.223479,
+    "lon": -111.978856,
+    "year": 1944,
+    "id": 1,
+    "mom": 2,
     "dad": 2
-}]
+}, {
+    "name": "Vallon Sperry Vickers",
+    "city": "Nephi, UT",
+    "lat": 39.710234,
+    "lon": -111.836322,
+    "year": 1915,
+    "id": 3,
+    "mom": 6,
+    "dad": 4
+}, {
+    "name": "Ruth Jane Klomp",
+    "city": "Ogden, UT",
+    "lat": 41.223000,
+    "lon": -111.973830,
+    "year": 1915,
+    "id": 4,
+    "mom": -1,
+    "dad": 7
+}, {
+    "name": "Wallace Joseph Vickers",
+    "city": "Nephi, UT",
+    "lat": 39.710234,
+    "lon": -111.836322,
+    "year": 1889,
+    "id": 5,
+    "mom": -1,
+    "dad": -1
+},{
+    "name": "Eva Pearl Sperry",
+    "city": "Nephi, UT",
+    "lat": 39.710234,
+    "lon": -111.836322,
+    "year": 1891,
+    "id": 6,
+    "mom": -1,
+    "dad": -1
+},{
+    "name": "Gerardus Gijsbertus Klomp",
+    "city": "Rotterdam, Netherlands",
+    "lat": 51.924420,
+    "lon": 4.477733,
+    "year": 1889,
+    "id": 7,
+    "mom": -1,
+    "dad": -1
+},{
+    "name": "Zina Geneva Jackson",
+    "city": "Ogden, UT",
+    "lat": 41.223000,
+    "lon": -111.973830,
+    "year": 1889,
+    "id": 7,
+    "mom": -1,
+    "dad": -1
+}
+
+]
 

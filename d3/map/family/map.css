@@ -51,3 +51,18 @@ div.tooltip {
     border-style: solid;
     border-width: 1px;
 }
+
+line.line-dad {
+  stroke: blue;
+  stroke-width: 4;
+}
+
+line.line-mom {
+  stroke: red;
+  stroke-width: 4;
+}
+
+circle.marker {
+  r: 3;
+  fill: red;
+}
