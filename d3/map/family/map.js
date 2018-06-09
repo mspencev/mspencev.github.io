@@ -8,16 +8,23 @@ var svg = d3.select( "body" )
   .attr( "width", w )
   .attr( "height", h );
 
+
+
+// Define the div for the tooltip
+var toolTipDiv = d3.select("body").append("div")	
+  .attr("class", "tooltip")				
+  .style("opacity", 0);
+
 var g = svg.append( "g" );
 
-var albersProjection = d3.geoEquirectangular()
+var projection = d3.geoEquirectangular()
   .scale( 150 )
   .rotate( [0, 0] )
   .center( [0, 0] )
   .translate( [w/2,h/2] );
 
 var geoPath = d3.geoPath()
-    .projection( albersProjection );
+    .projection( projection );
 
 let countriesGroup;
 
@@ -54,12 +61,31 @@ function getTextBox(selection) {
   ;
 }
 
+var geoJson;
+var familyJson;
+
 // get map data
 d3.json(
 // //   "https://raw.githubusercontent.com/andybarefoot/andybarefoot-www/master/maps/mapdata/custom50.json", function(json) {
     "https://mspencev.github.io/d3/map/family/custom50.json", function(json) {
     // "custom50.json", function(json) {
+    geoJson = json;
 
+    fetchFamilyTree();
+});
+
+function fetchFamilyTree() {
+    d3.json("https://mspencev.github.io/d3/map/family/family.json", function(err, json) {
+      if(err) console.log("error fetching data");
+
+        familyJson = json;
+        renderMap();
+    });
+}
+
+function renderMap(){
+  
+    
     countriesGroup = g.attr("id", "map");
     // add a background rectangle
     countriesGroup
@@ -71,7 +97,7 @@ d3.json(
 
 //   countries = g.selectAll( "path" )
   countries = countriesGroup.selectAll( "path" )
-    .data( json.features )
+    .data( geoJson.features )
     .enter()
     .append( "path" )
     .attr( "fill", "#ccc" )
@@ -87,60 +113,83 @@ d3.json(
         d3.select("#countryLabel" + d.properties.iso_a3).style("display", "none");
     });
 
-    // feature/country. This will contain the country name and a background rectangle
-    // Use CSS to have class "countryLabel" initially hidden
-    countryLabels = countriesGroup
-      .selectAll("g")
-      .data(json.features)
-      .enter()
-      .append("g")
-      .attr("class", "countryLabel")
-      .attr("id", function(d) {
-        return "countryLabel" + d.properties.iso_a3;
-      })
-      .attr("transform", function(d) {
-        return (
-          "translate(" + geoPath.centroid(d)[0] + "," + geoPath.centroid(d)[1] + ")"
-        );
-      })
-      // add mouseover functionality to the label
-      .on("mouseover", function(d, i) {
-          d3.select(this).style("display", "block");
-      })
-      .on("mouseout", function(d, i) {
-           d3.select(this).style("display", "none");
-     })
-      // add an onlcick action to zoom into clicked country
-      .on("click", function(d, i) {
-          d3.selectAll(".country").classed("country-on", false);
-          d3.select("#country" + d.properties.iso_a3).classed("country-on", true);
-        boxZoom(geoPath.bounds(d), geoPath.centroid(d), 20);
-      });
-    // add the text to the label group showing country name
-    countryLabels
-      .append("text")
-      .attr("class", "countryName")
-      .style("text-anchor", "middle")
-      .attr("dx", 0)
-      .attr("dy", 0)
-      .text(function(d) {
-        return d.properties.name;
-      })
-      .call(getTextBox);
-    // add a background rectangle the same size as the text
-    countryLabels
-      .insert("rect", "text")
-      .attr("class", "countryLabelBg")
-      .attr("transform", function(d) {
-        return "translate(" + (d.bbox.x - 2) + "," + d.bbox.y + ")";
-      })
-      .attr("width", function(d) {
-        return d.bbox.width + 4;
-      })
-      .attr("height", function(d) {
-        return d.bbox.height;
-      });
-});
+  // feature/country. This will contain the country name and a background rectangle
+  // Use CSS to have class "countryLabel" initially hidden
+  countryLabels = countriesGroup
+    .selectAll("g")
+    .data(geoJson.features)
+    .enter()
+    .append("g")
+    .attr("class", "countryLabel")
+    .attr("id", function(d) {
+      return "countryLabel" + d.properties.iso_a3;
+    })
+    .attr("transform", function(d) {
+      return (
+        "translate(" + geoPath.centroid(d)[0] + "," + geoPath.centroid(d)[1] + ")"
+      );
+    })
+    // add mouseover functionality to the label
+    .on("mouseover", function(d, i) {
+        d3.select(this).style("display", "block");
+    })
+    .on("mouseout", function(d, i) {
+          d3.select(this).style("display", "none");
+    })
+    // add an onlcick action to zoom into clicked country
+    .on("click", function(d, i) {
+        d3.selectAll(".country").classed("country-on", false);
+        d3.select("#country" + d.properties.iso_a3).classed("country-on", true);
+      boxZoom(geoPath.bounds(d), geoPath.centroid(d), 20);
+    });
+  // add the text to the label group showing country name
+  countryLabels
+    .append("text")
+    .attr("class", "countryName")
+    .style("text-anchor", "middle")
+    .attr("dx", 0)
+    .attr("dy", 0)
+    .text(function(d) {
+      return d.properties.name;
+    })
+    .call(getTextBox);
+  // add a background rectangle the same size as the text
+  countryLabels
+    .insert("rect", "text")
+    .attr("class", "countryLabelBg")
+    .attr("transform", function(d) {
+      return "translate(" + (d.bbox.x - 2) + "," + d.bbox.y + ")";
+    })
+    .attr("width", function(d) {
+      return d.bbox.width + 4;
+    })
+    .attr("height", function(d) {
+      return d.bbox.height;
+    });
+    
+  // add circles to svg
+  svg.selectAll("circle")
+    .data(familyJson).enter()
+      .append("circle")
+        .attr("cx", function (d) { 
+          console.log(d);
+          return projection([d.lon, d.lat])[0]; })
+        .attr("cy", function (d) { return projection([d.lon, d.lat])[1]; })
+        .attr("r", "8px")
+        .attr("fill", "red")
+        .on("mouseover", function(d) {		
+          toolTipDiv.style("opacity", 1.0)
+          toolTipDiv.html(function(){
+              return 'Name: ' + d.name + '<br>Birth: ' + 
+                      d.city + ', ' + d.year;
+          })
+              .style("left", (d3.event.pageX + 10) + "px")		
+              .style("top", (d3.event.pageY - 20) + "px");	
+          })					
+      .on("mouseout", function(d) {		
+          toolTipDiv.style("opacity", 0)
+      });   
+};
 
 
 // zoom to show a bounding box, with optional additional padding as percentage of box size

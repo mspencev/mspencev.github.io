@@ -3,7 +3,7 @@ body {
   background-color: #2A2C39;
   font-family: 'Yanone Kaffeesatz', sans-serif;
   font-weight: 200;
-  font-size: 17px;
+  font-size: 10px;
 }
 /* #map-holder {
   width: 100vw;
@@ -23,6 +23,7 @@ svg rect {
 .countryLabel{
   display: none;   /* hide all country labels by default */
   stroke: red;
+  pointer-events: none;
 }
 .countryName{
   fill: #FFFAFF;   /* country label text colour */
@@ -30,4 +31,23 @@ svg rect {
 .countryLabelBg{
   /* fill: #30BCED;    */
   opacity: 0;
+}
+
+div.tooltip {	
+    position: absolute;			
+    text-align: left;			
+    width: 125px;					
+    height: 40px;					
+    font: 12px sans-serif;		
+    background: rgb(208, 210, 212);	
+    border: 5px;	
+    border-color: rgb(12, 6, 6);	
+    border-radius: 5px;			
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    margin-top: 0px;
+    margin-bottom: 0px;    
+    border-style: solid;
+    border-width: 1px;
 }
