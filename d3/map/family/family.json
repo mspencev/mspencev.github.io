@@ -22,9 +22,9 @@
     "lat": 41.223479,
     "lon": -111.978856,
     "year": 1944,
-    "id": 1,
-    "mom": 2,
-    "dad": 2
+    "id": 2,
+    "mom": -1,
+    "dad": -1
 }, {
     "name": "Vallon Sperry Vickers",
     "city": "Nephi, UT",
