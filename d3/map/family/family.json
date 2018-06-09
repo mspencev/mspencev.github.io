@@ -1,6 +1,8 @@
 { "test":[  {
     "name": "Mark Vickers",
     "city": "Hayward, CA",
+    "lat": 37.642371,
+    "lon": -122.087015,
     "year": 1987,
     "id": 0,
     "mom": -1,
@@ -8,6 +10,8 @@
 }, {
     "name": "Don Vickers",
     "city": "Salt Lake City, UT",
+    "lat": 40.758225,
+    "lon": -111.926334,
     "year": 1943,
     "id": 1,
     "mom": -1,
