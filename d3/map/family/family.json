@@ -1,7 +1,7 @@
 { "test":[  {
     "name": "Mark Vickers",
     "city": "Hayward, CA",
-    "point": [-122.087015, 37.642371], //lon, lat
+    "point": [-122.087015, 37.642371], 
     "year": 1987,
     "id": 0,
     "mom": -1,
