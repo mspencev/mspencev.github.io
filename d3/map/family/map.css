@@ -54,15 +54,14 @@ div.tooltip {
 
 line.line-dad {
   stroke: blue;
-  stroke-width: 4;
+  stroke-width: 1;
 }
 
 line.line-mom {
   stroke: red;
-  stroke-width: 4;
+  stroke-width: 1;
 }
 
 circle.marker {
-  r: 3;
   fill: red;
 }

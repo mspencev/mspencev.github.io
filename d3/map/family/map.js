@@ -76,6 +76,7 @@ d3.json(
 
 function fetchFamilyTree() {
     d3.json("https://mspencev.github.io/d3/map/family/family.json", function(err, json) {
+      // d3.json("family.json", function(err, json) {
       if(err) console.log("error fetching data");
 
         familyJson = json;
@@ -180,6 +181,7 @@ function renderMarkers() {
         .attr("cx", function (d) { return projection([d.lon, d.lat])[0]; })
         .attr("cy", function (d) { return projection([d.lon, d.lat])[1]; })
         .attr('class', 'marker')
+        .attr('r', 3)
         .on("mouseover", function(d) {		
           toolTipDiv.style("opacity", 1.0)
           toolTipDiv.html(function(){
@@ -205,7 +207,7 @@ function renderLines() {
         .attr("y1", function (d) { return d.y1; })
         .attr("x2", function (d) { return d.x2; })
         .attr("y2", function (d) { return d.y2; })
-        .attr("class", function (d) { return d.isDad? "line-dad" : "line-mom"});
+        .attr("class", function (d) { return d.isDad? "line-dad" : "line-mom";});
 }
 
 function getLines() {
@@ -228,7 +230,8 @@ function getLines() {
         "y1": personPt[1],
         "x2": dadPt[0],
         "y2": dadPt[1],
-        "isDad": true
+        "isDad": true,
+        "parent": dad.name
       });
     }
 
@@ -237,9 +240,10 @@ function getLines() {
       lines.push({
         "x1": personPt[0],
         "y1": personPt[1],
-        "x2": dadPt[0],
-        "y2": dadPt[1],
-        "isDad": false
+        "x2": momPt[0],
+        "y2": momPt[1],
+        "isDad": false,
+        "parent": mom.name
       });
     }
 
