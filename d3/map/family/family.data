@@ -1,0 +1,106 @@
+// ID - Name, Birth Year
+// Brith City; Lat Lon
+// Dad ID, Mom ID
+
+
+0 - Mark Vickers, 1980
+Hayward, CA; 37.668821 -122.080796
+1, 2
+
+1 - Don Vickers, 1943
+Salt Lake City, UT; 40.760779 -111.891047
+3, 4
+
+2 - Marilyn Seegmiller, 1944
+Ogden, UT; 41.223000 -111.973830
+-1, -1
+
+3 - Vallon Sperry Vickers, 1915
+Nephi, UT; 39.710234 -111.836322
+4, 5
+
+4 - Wallace Joseph Vickers, 1889
+Nephi, UT; 39.710234 -111.836322
+-1, -1
+
+5 - Eva Pearl Sperry, 1891
+Nephi, UT; 39.710234 -111.836322
+-1, -1
+
+6 - Thomas Vickers, 1847
+
+
+7 - Jane Duncan Borrowman, 1852
+
+8 - Charles Henry Sperry, 1850
+
+9 - Caroline Webb, 1851
+
+10 - Ruth Jane Klomp, 1917
+
+11 - Gerardus Gijsbertus Klomp, 1889
+Rotterdam, Zuid-Holland, Netherlands
+
+12 - Zina Geneva Jackson, 1889
+
+13 - Bruin de Bruin, 1862
+
+14 - Adriana Jane Klomp, 1853
+
+15 - Arron Jackson Jr, 1854
+
+16 - Eliza Jane Rawson, 1857
+
+17 - 
+
+
+
+{
+    "name": "Ruth Jane Klomp",
+    "city": "Ogden, UT",
+    "lat": 41.223000,
+    "lon": -111.973830,
+    "year": 1915,
+    "id": 4,
+    "mom": -1,
+    "dad": 7
+}, {
+    "name": "Wallace Joseph Vickers",
+    "city": "Nephi, UT",
+    "lat": 39.710234,
+    "lon": -111.836322,
+    "year": 1889,
+    "id": 5,
+    "mom": -1,
+    "dad": -1
+},{
+    "name": "Eva Pearl Sperry",
+    "city": "Nephi, UT",
+    "lat": 39.710234,
+    "lon": -111.836322,
+    "year": 1891,
+    "id": 6,
+    "mom": -1,
+    "dad": -1
+},{
+    "name": "Gerardus Gijsbertus Klomp",
+    "city": "Rotterdam, Netherlands",
+    "lat": 51.924420,
+    "lon": 4.477733,
+    "year": 1889,
+    "id": 7,
+    "mom": -1,
+    "dad": -1
+},{
+    "name": "Zina Geneva Jackson",
+    "city": "Ogden, UT",
+    "lat": 41.223000,
+    "lon": -111.973830,
+    "year": 1889,
+    "id": 7,
+    "mom": -1,
+    "dad": -1
+}
+
+]
+
